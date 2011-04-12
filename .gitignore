@@ -1,0 +1,5 @@
+*
+!*.v
+!*.md
+!*.tex
+!.gitignore
