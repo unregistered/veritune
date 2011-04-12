@@ -1,0 +1,65 @@
+\documentclass[11pt,letterpaper,oneside]{article}
+\usepackage{url}
+\usepackage{fullpage}
+%\setlength{\columnsep}{1.7em}
+
+\begin{document}
+	\thispagestyle{empty}
+	\title{Speakurity: Using Speaker Recognition for Biometric Security}
+	\author{Chris Li, Grayson Smith, Carey Zhang}
+	\date{\today}
+	
+	%\twocolumn[%
+	% \centerline{\Large \bf Speakurity: Biometric Security with Speaker Recognition} %% Paper title
+  %
+	% \medskip
+  %
+	% \centerline{\bf Chris Li, Grayson Smith, Carey Zhang}
+	% \centerline{\bf EE201 Final Lab}
+	%      %% Author name(s)
+	% \vspace{2.5em}
+	% ]
+	\centerline{\Large \bf Speakurity: Biometric Security with Speaker Recognition} %% Paper title
+  
+	\medskip
+  
+	\centerline{\bf Chris Li, Grayson Smith, Carey Zhang}
+	\centerline{\bf EE201 Final Lab}
+	
+	\section{Introduction}
+	Biometrics takes advantage of unique human traits such as fingerprints or speech and applies it to access control.  
+	There is global demand, especially from governments, for biometric security systems.  Speech is an ideal biometric trait, 
+	as it is fairly unique and most people are capable of producing it.  Potential applications include automated authentication
+	of a user over the telephone or internet.
+	
+	
+	There are various metrics used in determining the robustness of a biometric security system\cite{security}.  The following are of interest to us.
+	\begin{enumerate}
+		\item Accuracy - How often does the system recognize an authorized speaker?
+		\item False Accept Rate - How often does the system recognize an unauthorized speaker?
+		\item Template Capacity - How many unique voices can be stored before the False Accept Rate goes too high?
+	\end{enumerate}
+
+	\section{Outline}
+	We will have a Mealy state machine with several states including Initial, Learn, Learning, and Recognize.  We will use the following inputs and outputs:
+	\begin{enumerate}
+		\item Sw0: Toggle between Learn and Recognize
+		\item Sw1-7: Go from Learn to Learning, where the system will store inputs from the FFT.
+		\item Ld0: Turns on when learning
+		\item Ld1-7: Turns on when its corresponding speaker is recognized.
+		\item SSD0-3: Shows the current state: I, L, Ln (where n is a number 1-7), A (Authorized), U (Unauthorized/unrecognized)
+	\end{enumerate}
+	
+	\section{Plan}
+	We will be using the Nexys 2 board to synthesize our Verilog.  In addition, we will need a microphone with digital outputs or an A to D converter.
+	
+	First we will prototype the system using MATLAB, determining the necessary parameters for a robust system.  
+	Next, we will implement the Cooley-Tukey FFT algorithm using a fixed number of points.  
+	Finally, we will convert our MATLAB code to a hardware implementation in Verilog.
+		
+	\begin{thebibliography}{9}
+		\bibitem{security}
+		\url{http://www.ccert.edu.cn/education/cissp/hism/039-041.html}
+		
+	\end{thebibliography}
+\end{document}
