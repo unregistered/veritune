@@ -19,7 +19,7 @@
 	%      %% Author name(s)
 	% \vspace{2.5em}
 	% ]
-	\centerline{\Large \bf Speakurity: Biometric Security with Speaker Recognition} %% Paper title
+	\centerline{\Large \bf Veritune: Auto-Tuning in Verilog} %% Paper title
   
 	\medskip
   
@@ -27,39 +27,35 @@
 	\centerline{\bf EE201 Final Lab}
 	
 	\section{Introduction}
-	Biometrics takes advantage of unique human traits such as fingerprints or speech and applies it to access control.  
-	There is global demand, especially from governments, for biometric security systems.  Speech is an ideal biometric trait, 
-	as it is fairly unique and most people are capable of producing it.  Potential applications include automated authentication
-	of a user over the telephone or internet.
+	Though it used to be an embarrassing secret for the music industry, the Auto-Tune effect has become a staple of modern music \cite{autotune}. 
+	When used sparingly, it can correct a slightly off-key singer; 
+	when abused, it can produce a unique audio effect.  
+	At its heart, the effect uses a phase vocoder to scale the signal in the frequency domain.
 	
-	
-	There are various metrics used in determining the robustness of a biometric security system\cite{security}.  The following are of interest to us.
-	\begin{enumerate}
-		\item Accuracy - How often does the system recognize an authorized speaker?
-		\item False Accept Rate - How often does the system recognize an unauthorized speaker?
-		\item Template Capacity - How many unique voices can be stored before the False Accept Rate goes too high?
-	\end{enumerate}
-
+	We will develop a device that can record and playback audio with pitch shifted by an amount specified by the user.
+	If time and processing power permit, we will make the device operate in realtime.
 	\section{Outline}
-	We will have a Mealy state machine with several states including Initial, Learn, Learning, and Recognize.  We will use the following inputs and outputs:
+	We will have a Moore state machine with several states including Initial, Listen, Compute, Idle, Play.  We will use the following inputs and outputs:
 	\begin{enumerate}
-		\item Sw0: Toggle between Learn and Recognize
-		\item Sw1-7: Go from Learn to Learning, where the system will store inputs from the FFT.
-		\item Ld0: Turns on when learning
-		\item Ld1-7: Turns on when its corresponding speaker is recognized.
-		\item SSD0-3: Shows the current state: I, L, Ln (where n is a number 1-7), A (Authorized), U (Unauthorized/unrecognized)
+		\item Sw7: Toggles shift up/shift down
+		\item Sw6-0: Specifies the amount of shift as a binary number
+		\item Btn3: Reset/Clear
+		\item Btn0: Record $\rightarrow$ Play
+		\item Btn1: Stop
+		\item SSD0-3: Shows the decimal amount of phase shift.  SSD0 shows the sign.
 	\end{enumerate}
 	
 	\section{Plan}
-	We will be using the Nexys 2 board to synthesize our Verilog.  In addition, we will need a microphone with digital outputs or an A to D converter.
+	We will be using the Nexys 2 board to synthesize our Verilog.  In addition, we will need a microphone with digital outputs as well as a speaker.
 	
-	First we will prototype the system using MATLAB, determining the necessary parameters for a robust system.  
-	Next, we will implement the Cooley-Tukey FFT algorithm using a fixed number of points.  
-	Finally, we will convert our MATLAB code to a hardware implementation in Verilog.
+	First we will prototype the system using \textsc{matlab}, determining the necessary parameters for a robust system.  
+	Next, we will implement the Cooley-Tukey FFT algorithm using 1024 points.
+	Next, we will implement the phase vocoder in \textsc{matlab}.
+	Finally, we will convert our \textsc{matlab} code to a hardware implementation in Verilog.
 		
 	\begin{thebibliography}{9}
-		\bibitem{security}
-		\url{http://www.ccert.edu.cn/education/cissp/hism/039-041.html}
+		\bibitem{autotune}
+		\url{http://www.time.com/time/magazine/article/0,9171,1877372-2,00.html}
 		
 	\end{thebibliography}
 \end{document}
