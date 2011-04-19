@@ -3,3 +3,4 @@
 !*.md
 !*.tex
 !.gitignore
+!*.m
