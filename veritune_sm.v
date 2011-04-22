@@ -2,21 +2,21 @@
 // By Chris Li, Grayson Smith, and Carey Zhang.
 `timescale 1ns / 1ps
 
-module veritune_sm(Clk, Reset, Rec, Stop, Play, Freq, Audio_In, q_I, q_Rec, q_Stop, q_Play, Audio_Out);
+module veritune_sm(Clk, Reset, Rec, Stop, Play, Done_Shift, Freq, Audio_In, q_I, q_Rec, q_Stop, q_Shift, q_Play, Audio_Out);
 	// inputs
-	input Clk, Reset, Rec, Stop, Play;
+	input Clk, Reset, Rec, Stop, Play, Done_Shift;
 	input [7:0] Freq;
 	input [15:0] Audio_In;
 	
 	// outputs
 	output reg [15:0] Audio_Out;
 	// store current state
-	output q_I, q_Rec, q_Stop, q_Play;
+	output q_I, q_Rec, q_Stop, q_Shift, q_Play;
 	reg [3:0] state;
-	assign {q_Play, q_Stop, q_Rec, q_I} = state;
+	assign {q_Play, q_Shift, q_Stop, q_Rec, q_I} = state;
 	
 	// local
-	localparam I = 4'b0001, REC = 4'b0010, STOP = 4'b0100, PLAY = 4'b1000, UNK = 4'bXXXX;
+	localparam I = 5'b00001, REC = 5'b00010, STOP = 5'b00100, SHIFT = 5'b01000, PLAY = 5'b10000, UNK = 5'bXXXXX;
 	localparam LENGTH = 131070;	// 2^17-2, max number of samples -2
 	reg [15:0] audio_data[16:0];	// unpacked array of N-bits
 	reg [16:0] index;
@@ -61,6 +61,7 @@ module veritune_sm(Clk, Reset, Rec, Stop, Play, Freq, Audio_In, q_I, q_Rec, q_St
 			REC:
 			begin
 				// state transition logic
+				// TODO: handle if out of memory
 				if (Stop || (index==LENGTH))
 				begin
 					length <= index;
@@ -71,30 +72,34 @@ module veritune_sm(Clk, Reset, Rec, Stop, Play, Freq, Audio_In, q_I, q_Rec, q_St
 				
 				// store data from audio input
 				audio_data[index] <= Audio_In;
-				index <= index+1;
+				//index <= index+1;
 			end
 			STOP:
 			begin
 				// state transition logic
 				if (Play)
+					state <= SHIFT;
+			end
+			SHIFT:
+			begin
+				// state transition logic
+				if (Done_Shift)
 					state <= PLAY;
 					
-				// just wait? or do frequency shift here?
 				index <= 0;
 			end
 			PLAY:
 			begin
 				// state transition logic
-				if (Stop || index==length)
+				if (Stop)// || index==length)
 					state <= STOP;
 					
-				// do frequency shift?
-				
 				// drive audio output
 
 			end
 			default:
-				state <= UNK;
+				//state <= UNK;
+				state <= 5'b11111;
 		endcase
 	end 
 endmodule

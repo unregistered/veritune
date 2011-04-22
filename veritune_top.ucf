@@ -1,0 +1,58 @@
+# UCF file for NEXYS 2 board
+# File: ee201l_GCD_top.ucf
+# Date: 2/14/08
+# Gandhi Puvvada
+
+# Inactivate the Chip-Enables and other control pins of the 
+# memories on the Nexys-2 board 
+# Intel StrataFlash JS28F128J3D35 and Micron PSDRAM MT45W8MW16
+NET St_ce_bar LOC = R5;
+NET St_rp_bar LOC = T5;
+NET Mt_ce_bar LOC = R6;
+NET Mt_St_oe_bar LOC = T2;
+NET Mt_St_we_bar LOC = N7;
+
+NET ClkPort  LOC = B8;
+
+NET Sw0  LOC = G18;
+NET Sw1  LOC = H18;
+NET Sw2  LOC = K18;
+#NET Sw3  LOC = K17;
+#NET Sw4  LOC = L14;
+#NET Sw5  LOC = L13;
+#NET Sw6  LOC = N17;
+NET Sw7  LOC = R17;
+
+NET Ld0  LOC = J14;
+NET Ld1  LOC = J15;
+#NET Ld2  LOC = K15;
+NET Ld3  LOC = K14;
+NET Ld4  LOC = E17;
+NET Ld5  LOC = P15;
+NET Ld6  LOC = F4;
+NET Ld7  LOC = R4;
+
+NET Btn0  LOC = B18;
+#NET Btn1  LOC = D18;
+#NET Btn2  LOC = E18;
+NET Btn3  LOC = H13;
+
+NET An0  LOC = F17;
+NET An1  LOC = H17;
+NET An2  LOC = C18;
+NET An3  LOC = F15;
+
+NET Ca  LOC = L18;
+NET Cb  LOC = F18;
+NET Cc  LOC = D17;
+NET Cd  LOC = D16;
+NET Ce  LOC = G14;
+NET Cf  LOC = J17;
+NET Cg  LOC = H14;
+
+NET Dp  LOC = C17;
+
+
+# NET "clk_port" TNM_NET = "clk_port";
+NET "ClkPort" PERIOD = 20.0ns HIGH 50%;
+NET "Btn3" CLOCK_DEDICATED_ROUTE = FALSE; 
