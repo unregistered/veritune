@@ -12,7 +12,7 @@ module veritune_sm(Clk, Reset, Rec, Stop, Play, Done_Shift, Freq, Audio_In, q_I,
 	output reg [15:0] Audio_Out;
 	// store current state
 	output q_I, q_Rec, q_Stop, q_Shift, q_Play;
-	reg [3:0] state;
+	reg [4:0] state;
 	assign {q_Play, q_Shift, q_Stop, q_Rec, q_I} = state;
 	
 	// local
@@ -95,7 +95,7 @@ module veritune_sm(Clk, Reset, Rec, Stop, Play, Done_Shift, Freq, Audio_In, q_I,
 					state <= STOP;
 					
 				// drive audio output
-
+				//Audio_Out <= Audio_Out+10;
 			end
 			default:
 				//state <= UNK;

@@ -37,9 +37,10 @@ module shifter(Clk, Reset, Start,/*whatever inputs needed*/ Done);
 			COUNTING:
 			begin
 				if (count == TERMINAL)
+				begin
 					Done <= 1;
-				if (count == 0 && Done)
 					state <= IDLE;
+				end
 				count <= count+1;
 			end
 		endcase

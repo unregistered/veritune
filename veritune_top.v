@@ -12,7 +12,7 @@ module veritune_top(ClkPort,
 			An0, An1, An2, An3,
 			Ca, Cb, Cc, Cd, Ce, Cf, Cg, 
 			Dp,
-			//Spkr
+			//SDIN, SCLK, LRCK, MCLK
 			);
 	/*  INPUTS */
 	// Clock & Reset I/O
@@ -32,7 +32,7 @@ module veritune_top(ClkPort,
 	output 	Cg, Cf, Ce, Cd, Cc, Cb, Ca, Dp;
 	output 	An0, An1, An2, An3;
 	// Audio
-	//output	Spkr;
+	//output	SDIN, SCLK, LRCK, MCLK;
 	
 	/*  LOCAL SIGNALS */
 	wire			Reset, ClkPort;
@@ -85,6 +85,9 @@ module veritune_top(ClkPort,
 	// Let us use full-speed clock and use single-stepping to 
 	// see our the operation of our design 
 	assign	sys_clk = board_clk;
+//	assign MCLK = sys_clk;
+//	assign SCLK = DIV_CLK[16];
+//	assign LRCK = DIV_CLK[15];
 	
 	// Disable the two memories on the board, since they are not used in this design
 	assign {St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar} = {5'b11111};
@@ -127,7 +130,7 @@ module veritune_top(ClkPort,
 			.q_Stop(q_Stop),
 			.q_Shift(q_Shift),
 			.q_Play(q_Play),
-			.Audio_Out(Spkr)
+			.Audio_Out(SDIN)
 	);
 	
 	// shifter module

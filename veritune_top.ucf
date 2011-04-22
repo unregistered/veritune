@@ -52,6 +52,11 @@ NET Cg  LOC = H14;
 
 NET Dp  LOC = C17;
 
+#NET SDIN LOC = R27;
+#NET SCLK LOC = R29;
+#NET LRCK LOC = R31;
+#NET MCLK LOC = R33;
+
 
 # NET "clk_port" TNM_NET = "clk_port";
 NET "ClkPort" PERIOD = 20.0ns HIGH 50%;
