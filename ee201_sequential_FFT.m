@@ -44,6 +44,7 @@ n = N;
 m = log2(N);
 
 % Bit reversal
+clc
 tmp = zeros(size(X));
 x_re = tmp;
 x_im = tmp;
@@ -56,7 +57,7 @@ for i=0:size(X,1)-1
     %[X(i+1)]
     tmp(reversed+1) = X(i+1);
 end
-x = tmp.*S;
+x_re = tmp.*S;
 
 tick = 0;
 n_passes = m;
@@ -74,23 +75,27 @@ for i=0:n_passes-1
             i_top = (n_butterflies)*j+k+1;
             i_bot = (n_butterflies)*j+k+1+n_butterflies/2;
             twiddle = round(S*LUT((n_blocks)*k+1));
+            twiddle_re = real(twiddle);
+            twiddle_im = imag(twiddle);
             fprintf('    Butterfly %d and %d: top: %d bottom: %d\n', k, k+n_butterflies/2, i_top-1, i_bot-1)
-            fprintf('      k=%d n=%d twiddle=%d+i%d lut=%d+i%d twiddle_scale=%d\n', k, n_butterflies, real(twiddle), imag(twiddle), real(LUT(N/(2^(1+i))*k+1)), imag(LUT(N/(2^(1+i))*k+1)), N/(2^(1+i)))
-            top = x(i_top);
-            bot = x(i_bot)*twiddle/S;
+            fprintf('      k=%d n=%d twiddle=%d+i%d lut=%d+i%d twiddle_scale=%d\n', k, n_butterflies, real(twiddle), imag(twiddle), real(LUT(N/(2^(1+i))*k+1)), imag(LUT(N/(2^(1+i))*k+1)), N/(2^(1+i)))            
             
-            bot_re = real(x(i_bot))*real(twiddle)/S - imag(x(i_bot))*imag(twiddle)/S;
-            bot_im = real(x(i_bot))*imag(twiddle)/S + imag(x(i_bot))*real(twiddle)/S;
-            top_re = real(x(i_top));
-            top_im = imag(x(i_top));
+            ac = floor(x_re(i_bot)*twiddle_re/S);
+            bd = floor(x_im(i_bot)*twiddle_im/S);
+            ad = floor(x_re(i_bot)*twiddle_im/S);
+            bc = floor(x_im(i_bot)*twiddle_re/S);
+            
+            top_re = x_re(i_top);
+            top_im = x_im(i_top);
+            bot_re = ac-bd;
+            bot_im = ad+bc;
 
-            %fprintf('      i_top=%d i_bot=%d\n', i_top, i_bot)
-            x(i_top) = top+bot;
-            x(i_bot) = top-bot;
-            x_re(i_top) = top_re+bot_re;
-            x_im(i_top) = top_im+bot_im;
-            x_re(i_bot) = top_re-bot_re;
-            x_im(i_bot) = top_im-bot_im;
+            x_re(i_top) = (top_re)+(bot_re);
+            x_im(i_top) = (top_im)+(bot_im);
+            x_re(i_bot) = (top_re)-(bot_re);
+            x_im(i_bot) = (top_im)-(bot_im);
+            
+            fprintf('      x_top=%d x_bot=%d\n', x(i_top), x(i_bot));
             fprintf('------top_re=%d top_im=%d\n', top_re, top_im);
             fprintf('------bot_re=%d bot_im=%d\n', bot_re, bot_im);
             %fprintf('      x(%d)=%d+i%d\n', i_top, real(top+bot), imag(top+bot));
@@ -114,13 +119,13 @@ end
 
 %% Generate HW TB
 clc
-a = fft(y(1:N));
+a = (y(1:N));
 for i=0:N-1
     fprintf('X_Re[%d]=', i);
     if(a(i+1)<0)
         fprintf('-');
     end
-    fprintf('15''d%d; ', abs(real(round(S*a(i+1)))));
+    fprintf('16''d%d; ', abs(real(round(S*a(i+1)))));
 end
 
 %% Generate packed array in fft
