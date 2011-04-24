@@ -2,7 +2,7 @@
 clear
 clc
 load handel;
-N=32; 
+N=1024; 
 m = log2(N);
 vis = 8;
 S = 2^15-1;
