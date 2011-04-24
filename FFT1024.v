@@ -9,20 +9,20 @@ module FFT1024(
 	input wire Reset,
 	input wire Start,
 	input wire Ack,
-	input wire [16*1024-1:0] x_re_packed,
-	input wire [16*1024-1:0] x_im_packed,
+	input wire [32*1024-1:0] x_re_packed,
+	input wire [32*1024-1:0] x_im_packed,
 	output reg [3:0] state,
 	output wire Done,
-	output wire [16*1024-1:0] y_re_packed,
-	output wire [16*1024-1:0] y_im_packed
+	output wire [32*1024-1:0] y_re_packed,
+	output wire [32*1024-1:0] y_im_packed
 );
 	//	Params
-	parameter N		= 8;
-	parameter M		= 3;
+	parameter N		= 32;
+	parameter M		= 5;
 	
 	//	Inputs
-	reg signed [15:0] x_re [1023:0];
-	reg signed [15:0] x_im [1023:0];
+	reg signed [31:0] x_re [1023:0];
+	reg signed [31:0] x_im [1023:0];
 	
 	//	States
 	localparam INIT = 4'b1000, LOAD = 4'b0100, PROC = 4'b0010, DONE = 4'b0001, UNK = 4'bXXXX;
@@ -37,11 +37,12 @@ module FFT1024(
 	reg [4:0] i;
 	reg [9:0] j, k;
 	wire signed [15:0] twiddle_re, twiddle_im;
-	wire signed [15:0] top_re, top_im, bot_re, bot_im;
+	wire signed [31:0] top_re, top_im;
+	wire signed [63:0] bot_re, bot_im;
 	
 	wire [9:0] TERM_I, TERM_J, TERM_K, n_blocks, n_passes, address, i_top, i_bot;
 	wire [10:0] n_butterflies;
-	wire [32:0] ac, bd, ad, bc;
+	wire signed [63:0] ac, bd, ad, bc;
 	assign n_passes = M;
 	assign n_blocks = 1 << M-i-1;
 	assign n_butterflies = 1 << i+1;
@@ -66,8 +67,8 @@ module FFT1024(
 	assign top_re = x_re[i_top];
 	assign top_im = x_im[i_top];
 	
-	assign bot_re = (ac >> 15)-(bd>>15);
-	assign bot_im = (ad >> 15)+(bc>>15);
+	assign bot_re = (ac-bd);
+	assign bot_im = (ad+bc);
 		
 	//	Twiddle LUT
 	FFT8_LUT FFTLUT (
@@ -113,10 +114,11 @@ module FFT1024(
 					//
 					//	See ee201_sequential_FFT.m
 					//
-					x_re[0]<=x_re_packed[15:0]; 
-					x_re[1]<=x_re_packed[79:64]; x_re[2]<=x_re_packed[47:32]; x_re[3]<=x_re_packed[111:96]; x_re[4]<=x_re_packed[31:16]; x_re[5]<=x_re_packed[95:80]; x_re[6]<=x_re_packed[63:48]; x_re[7]<=x_re_packed[127:112];
-					x_im[0]<=x_im_packed[15:0]; 
-					x_im[1]<=x_im_packed[79:64]; x_im[2]<=x_im_packed[47:32]; x_im[3]<=x_im_packed[111:96]; x_im[4]<=x_im_packed[31:16]; x_im[5]<=x_im_packed[95:80]; x_im[6]<=x_im_packed[63:48]; x_im[7]<=x_im_packed[127:112];
+					x_re[0]<=x_re_packed[31:0]; 
+					x_re[1]<=x_re_packed[543:512]; x_re[2]<=x_re_packed[287:256]; x_re[3]<=x_re_packed[799:768]; x_re[4]<=x_re_packed[159:128]; x_re[5]<=x_re_packed[671:640]; x_re[6]<=x_re_packed[415:384]; x_re[7]<=x_re_packed[927:896]; x_re[8]<=x_re_packed[95:64]; x_re[9]<=x_re_packed[607:576]; x_re[10]<=x_re_packed[351:320]; x_re[11]<=x_re_packed[863:832]; x_re[12]<=x_re_packed[223:192]; x_re[13]<=x_re_packed[735:704]; x_re[14]<=x_re_packed[479:448]; x_re[15]<=x_re_packed[991:960]; x_re[16]<=x_re_packed[63:32]; x_re[17]<=x_re_packed[575:544]; x_re[18]<=x_re_packed[319:288]; x_re[19]<=x_re_packed[831:800]; x_re[20]<=x_re_packed[191:160]; x_re[21]<=x_re_packed[703:672]; x_re[22]<=x_re_packed[447:416]; x_re[23]<=x_re_packed[959:928]; x_re[24]<=x_re_packed[127:96]; x_re[25]<=x_re_packed[639:608]; x_re[26]<=x_re_packed[383:352]; x_re[27]<=x_re_packed[895:864]; x_re[28]<=x_re_packed[255:224]; x_re[29]<=x_re_packed[767:736]; x_re[30]<=x_re_packed[511:480]; x_re[31]<=x_re_packed[1023:992];
+					x_im[0]<=x_im_packed[31:0]; 
+					x_im[1]<=x_im_packed[543:512]; x_im[2]<=x_im_packed[287:256]; x_im[3]<=x_im_packed[799:768]; x_im[4]<=x_im_packed[159:128]; x_im[5]<=x_im_packed[671:640]; x_im[6]<=x_im_packed[415:384]; x_im[7]<=x_im_packed[927:896]; x_im[8]<=x_im_packed[95:64]; x_im[9]<=x_im_packed[607:576]; x_im[10]<=x_im_packed[351:320]; x_im[11]<=x_im_packed[863:832]; x_im[12]<=x_im_packed[223:192]; x_im[13]<=x_im_packed[735:704]; x_im[14]<=x_im_packed[479:448]; x_im[15]<=x_im_packed[991:960]; x_im[16]<=x_im_packed[63:32]; x_im[17]<=x_im_packed[575:544]; x_im[18]<=x_im_packed[319:288]; x_im[19]<=x_im_packed[831:800]; x_im[20]<=x_im_packed[191:160]; x_im[21]<=x_im_packed[703:672]; x_im[22]<=x_im_packed[447:416]; x_im[23]<=x_im_packed[959:928]; x_im[24]<=x_im_packed[127:96]; x_im[25]<=x_im_packed[639:608]; x_im[26]<=x_im_packed[383:352]; x_im[27]<=x_im_packed[895:864]; x_im[28]<=x_im_packed[255:224]; x_im[29]<=x_im_packed[767:736]; x_im[30]<=x_im_packed[511:480]; x_im[31]<=x_im_packed[1023:992];
+																																							
 					//	End Bit Reversal
 					state <= PROC;					
 				end
@@ -127,12 +129,13 @@ module FFT1024(
 				//	Out: DONE
 				PROC:
 				begin
-				$display("Pass %d Block %d Butterflies %d and %d (i_top %d i_bot %d)", i, j, k, k+n_butterflies/2, i_top, i_bot);
-				$display("  --> address %d twiddle %d+i%d", address, twiddle_re, twiddle_im);
-				$display("  --> x[i_top] %d + %d i; x[i_bot] %d+%d i", x_re[i_top], x_im[i_top], x_re[i_bot], x_im[i_bot]);
-				$display("  --> ac=%d bd=%d ad=%d bc=%d", ac, bd, ad, bc);
-				$display("    --> top_re %d top_im %d", top_re, top_im);
-				$display("    --> bot_re %d bot_im %d", bot_re, bot_im);
+					$display("Pass %d Block %d Butterflies %d and %d (i_top %d i_bot %d)", i, j, k, k+n_butterflies/2, i_top, i_bot);
+					$display("  --> address %d twiddle %d+i%d", address, twiddle_re, twiddle_im);
+					$display("  --> x[i_top] %d + %d i; x[i_bot] %d+%d i", x_re[i_top], x_im[i_top], x_re[i_bot], x_im[i_bot]);
+					$display("  --> ac=%d bd=%d ad=%d bc=%d", ac, bd, ad, bc);
+					$display("    --> top_re %d top_im %d", top_re, top_im);
+					$display("    --> bot_re %d bot_im %d", bot_re, bot_im);
+					$display("    --> topim %d botim %d botim>>15 %d nextval %d", top_im, bot_im, bot_im>>15, top_im - (bot_im>>15));
 				
 			
 				
@@ -170,11 +173,10 @@ module FFT1024(
 					//	twiddle_re/im				Twiddle factor from the LUT
 					//
 					//$display("    i_top %d i_bot %d address %d twiddle %d + i %d", i_top, i_bot, address, twiddle_re, twiddle_im);
-					$display("    --> x_re[i_top] %d", top_re+bot_re);
-					x_re[i_top] <= top_re + bot_re;
-					x_im[i_top] <= top_im + bot_im;
-					x_re[i_bot] <= top_re - bot_re;
-					x_im[i_bot] <= top_im - bot_im;
+					x_re[i_top] <= top_re + (bot_re >> 15);
+					x_im[i_top] <= top_im + (bot_im >> 15);
+					x_re[i_bot] <= top_re - (bot_re >> 15);
+					x_im[i_bot] <= top_im - (bot_im >> 15);
 					//state <= DONE;
 				end
 			
@@ -187,14 +189,14 @@ module FFT1024(
 					if(Ack)
 					begin
 						$display("Done.");
-						$display("X0 %d", x_re[0]);
-						$display("X1 %d", x_re[1]);
-						$display("X2 %d", x_re[2]);
-						$display("X3 %d", x_re[3]);
-						$display("X4 %d", x_re[4]);
-						$display("X5 %d", x_re[5]);
-						$display("X6 %d", x_re[6]);
-						$display("X7 %d", x_re[7]);
+						$display("X0 %d + i %d", x_re[0], x_im[0]);
+						$display("X1 %d + i %d", x_re[1], x_im[1]);
+						$display("X2 %d + i %d", x_re[2], x_im[2]);
+						$display("X3 %d + i %d", x_re[3], x_im[3]);
+						$display("X4 %d + i %d", x_re[4], x_im[4]);
+						$display("X5 %d + i %d", x_re[5], x_im[5]);
+						$display("X6 %d + i %d", x_re[6], x_im[6]);
+						$display("X7 %d + i %d", x_re[7], x_im[7]);
 						state <= INIT;
 					end
 					else
