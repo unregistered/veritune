@@ -2,7 +2,7 @@
 clear
 clc
 load handel;
-N=8; 
+N=1024; 
 m = log2(N);
 vis = 8;
 S = 2^15-1;
@@ -97,9 +97,6 @@ for i=0:n_passes-1
             x_im(i_top) = round(top_im+bot_im);
             x_re(i_bot) = round(top_re-bot_re);
             x_im(i_bot) = round(top_im-bot_im);  
-            
-            [[0:7]' [x_re(1); x_re(5); x_re(3); x_re(7); x_re(2); x_re(6); x_re(4); x_re(8)]]
-
             
             %fprintf('  --> ac=%d bd=%d ad=%d bc=%d\n', ac, bd, ad, bc);
 			%fprintf('    --> top_re %d top_im %d\n', top_re, top_im);

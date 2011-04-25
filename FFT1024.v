@@ -25,15 +25,14 @@ module FFT1024(
 	//output wire Overflow
 );
 	//	Params
-	parameter N		= 8;
-	parameter M		= 3;
+	parameter N		= 1024;
+	parameter M		= 10;
 	
 	//	States
 	localparam INIT = 4'b1000, LOAD = 4'b0100, PROC = 4'b0010, DONE = 4'b0001, UNK = 4'bXXXX;
 	wire Init, Load, Proc;
 	assign {Init, Load, Proc, Done} = state;
 	
-	//	Output
 	//	Internal
 	reg [4:0] i;
 	reg [9:0] j, k;
@@ -64,8 +63,6 @@ module FFT1024(
 	//	Decimal index -> Binary -> Reverse Binary -> New decimal index
 	//	          9   -> 01001  -> 10010          -> 18
 	//
-	assign i_top_out = {i_top[0], i_top[1], i_top[2]};//, i_top[3], i_top[4], i_top[5], i_top[6], i_top[7], i_top[8], i_top[9]};
-	assign i_bot_out = {i_bot[0], i_bot[1], i_bot[2]};//, i_bot[3], i_bot[4], i_bot[5], i_bot[6], i_bot[7], i_bot[8], i_bot[9]};
 	
 	
 	
@@ -88,7 +85,7 @@ module FFT1024(
 	assign y_bot_im = top_im - (bot_im);
 		
 	//	Twiddle LUT
-	FFT8_LUT LUT (
+	FFT1024_LUT LUT (
 		.n(address[9:0]),
 		.twiddle({twiddle_re, twiddle_im})
 	);
@@ -122,7 +119,7 @@ module FFT1024(
 				//	Out: DONE
 				PROC:
 				begin
-					$display("--Pass %d Block %d Butterflies %d and %d (i_top %d i_bot %d i_top_out %d i_bot_out %d)", i, j, k, k+n_butterflies/2, i_top, i_bot, i_top_out, i_bot_out);
+					$display("--Pass %d Block %d Butterflies %d and %d (i_top %d i_bot %d)", i, j, k, k+n_butterflies/2, i_top, i_bot);
 					$display("----address %d twiddle %d+i%d", address, twiddle_re, twiddle_im);
 					$display("----x[i_top] %d + %d i; x[i_bot] %d+%d i", x_top_re, x_top_im, x_bot_re, x_bot_im);
 					$display("----ac=%d bd=%d ad=%d bc=%d", ac, bd, ad, bc);
