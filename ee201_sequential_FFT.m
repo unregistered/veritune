@@ -2,7 +2,7 @@
 clear
 clc
 load handel;
-N=1024; 
+N=8; 
 m = log2(N);
 vis = 8;
 S = 2^15-1;
@@ -71,7 +71,7 @@ for i=0:n_passes-1
     for j=0:n_blocks-1
         fprintf('  Block %d\n', j)
 
-        for k=0:n_butterflies/2-1            
+        for k=0:n_butterflies/2-1          
             i_top = (n_butterflies)*j+k+1;
             i_bot = (n_butterflies)*j+k+1+n_butterflies/2;
             twiddle = round(S*LUT((n_blocks)*k+1));
@@ -88,19 +88,22 @@ for i=0:n_passes-1
             
             top_re = x_re(i_top);
             top_im = x_im(i_top);
-            bot_re = ac-bd;
-            bot_im = ad+bc;
-
-            x_re(i_top) = round(top_re+bot_re/S);
-            x_im(i_top) = round(top_im+bot_im/S);
-            x_re(i_bot) = round(top_re-bot_re/S);
-            x_im(i_bot) = round(top_im-bot_im/S);  
+            bot_re = (ac-bd)/S;
+            bot_im = (ad+bc)/S;
             
-            fprintf('  --> ac=%d bd=%d ad=%d bc=%d\n', ac, bd, ad, bc);
-			fprintf('    --> top_re %d top_im %d\n', top_re, top_im);
-			fprintf('    --> bot_re %d bot_im %d\n', bot_re, bot_im);
-            %fprintf('      x(%d)=%d+i%d\n', i_top, real(top+bot), imag(top+bot));
-            %fprintf('      x(%d)=%d+i%d\n', i_bot, real(top-bot), imag(top-bot));
+            [[0:7]' [x_re(1); x_re(5); x_re(3); x_re(7); x_re(2); x_re(6); x_re(4); x_re(8)]]
+
+            x_re(i_top) = round(top_re+bot_re);
+            x_im(i_top) = round(top_im+bot_im);
+            x_re(i_bot) = round(top_re-bot_re);
+            x_im(i_bot) = round(top_im-bot_im);  
+            
+            [[0:7]' [x_re(1); x_re(5); x_re(3); x_re(7); x_re(2); x_re(6); x_re(4); x_re(8)]]
+
+            
+            %fprintf('  --> ac=%d bd=%d ad=%d bc=%d\n', ac, bd, ad, bc);
+			%fprintf('    --> top_re %d top_im %d\n', top_re, top_im);
+			%fprintf('    --> bot_re %d bot_im %d\n', bot_re, bot_im);
         end
     end
 end
@@ -110,7 +113,7 @@ disp '=======               ==='
 [ a(1:vis) x_re(1:vis)/S x_im(1:vis)/S]
 disp 'Hw'
 disp '=='
-[round(x_re(1:vis)) round(x_im(1:vis))]
+[x_re(1:vis) x_im(1:vis)]
 %x(1:vis)
 
 %% Generate LUT test bench
@@ -124,55 +127,25 @@ end
 clc
 a = (y(1:N));
 for i=0:N-1
-    fprintf('X_Re[%d]=', i);
+    inorder = dec2bin(i);
+    while size(inorder,2) < m
+        inorder = ['0' inorder];
+    end
+    reversed = bin2dec(fliplr(inorder));
+    
+    fprintf('X_Re[%d]=', reversed);
     if(a(i+1)<0)
         fprintf('-');
     end
-    fprintf('32''d%d; ', abs(real(round(S*a(i+1)))));
+    fprintf('32''d%d;', abs(real(round(S*a(i+1)))));
 end
-
-%% Generate packed array in fft
-clc
-fprintf('assign y_re_packed = { ');
+fprintf('\n');
 for i=0:N-1
-    fprintf('x_re[%d]', N-1-i);
-    if i==(N-1)
-        fprintf('};\n');
-    else
-        fprintf(', ');
+    fprintf('X_Im[%d]=', i);
+    if(a(i+1)<0)
+        fprintf('-');
     end
-end
-
-fprintf('assign y_im_packed = { ');
-for i=0:N-1
-    fprintf('x_im[%d]', N-1-i);
-    if i==(N-1)
-        fprintf('};\n');
-    else
-        fprintf(', ');
-    end
-end
-
-%% Generate packed array in TB
-clc
-fprintf('wire X_Re_Packed = { ');
-for i=0:N-1
-    fprintf('X_Re[%d]', N-1-i);
-    if i==(N-1)
-        fprintf('};\n');
-    else
-        fprintf(', ');
-    end
-end
-
-fprintf('wire X_Im_Packed = { ');
-for i=0:N-1
-    fprintf('X_Im[%d]', N-1-i);
-    if i==(N-1)
-        fprintf('};\n');
-    else
-        fprintf(', ');
-    end
+    fprintf('32''d%d; ', 0);
 end
 
 %% Generate unpacked array in fft with Bit Reversal

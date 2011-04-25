@@ -5,7 +5,6 @@ module FFT8_LUT(n, twiddle);
 	
 	always @ (n)
 	begin
-		//$display("LUT address=%d", n);
 		case(n)
 		3'd0  : twiddle = { 16'd32767   ,  16'd0       }; //i=0  n=8  twiddle= 1               + i 0
 		3'd1  : twiddle = { 16'd23170   , -16'd23170   }; //i=1  n=8  twiddle= 7.071068e-01    + i -7.071068e-01
