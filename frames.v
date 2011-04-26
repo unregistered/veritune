@@ -7,8 +7,8 @@
 // Max number of slices that can be obtained: Rounded! (length of input - window size) / hop
 num_slices <= 
 
+hop <= 256;
 // space between windows, they have as 256
-hop <= 
 
 // local changing of the source file to truncate and make sure only integer # of hop
 x <= 
