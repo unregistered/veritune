@@ -5,3 +5,10 @@
 !.gitignore
 !*.m
 !*.ucf
+!report
+!report/*.bst
+!report/*.sty
+!report/images
+!report/images/*
+report/images/.*
+report/.*
