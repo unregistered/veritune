@@ -13,7 +13,6 @@ module FFT1024(
 	input wire signed [31:0] x_top_im,
 	input wire signed [31:0] x_bot_re,
 	input wire signed [31:0] x_bot_im,
-	// real index of requested input
 	output wire [9:0] i_top,
 	output wire [9:0] i_bot,
 	output reg [3:0] state,
@@ -76,8 +75,8 @@ module FFT1024(
 	assign top_re = x_top_re;
 	assign top_im = x_top_im;
 	
-	assign bot_re = (ac-bd)>>15;
-	assign bot_im = (ad+bc)>>15;
+	assign bot_re = (ac-bd)>>>15; // Divide by 2^15
+	assign bot_im = (ad+bc)>>>15;
 	
 	assign y_top_re = top_re + (bot_re);
 	assign y_top_im = top_im + (bot_im);

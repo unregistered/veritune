@@ -16,14 +16,6 @@ module FFT1024_tb_v;
 	wire signed [31:0] x_top_im;
 	wire signed [31:0] x_bot_re;
 	wire signed [31:0] x_bot_im;	
-	
-	// Internal
-	wire signed [31:0] y_top_re;
-	wire signed [31:0] y_top_im;
-	wire signed [31:0] y_bot_re;
-	wire signed [31:0] y_bot_im;
-	wire [9:0]  i_top, i_bot;
-	
 	wire signed [31:0] x0, x1, x2, x3, x4, x5, x6, x7;
 	assign x0 = X_Re[0];
 	assign x1 = X_Re[1];
@@ -32,12 +24,20 @@ module FFT1024_tb_v;
 	assign x4 = X_Re[4];
 	assign x5 = X_Re[5];
 	assign x6 = X_Re[6];
-	assign x7 = X_Re[7];
+	assign x7 = X_Re[7];	
+	
+	// Internal
+	wire signed [31:0] y_top_re;
+	wire signed [31:0] y_top_im;
+	wire signed [31:0] y_bot_re;
+	wire signed [31:0] y_bot_im;
+	wire [9:0]  i_top, i_bot;
 	assign x_top_re = X_Re[i_top];
 	assign x_top_im = X_Im[i_top];
 	assign x_bot_re = X_Re[i_bot];
 	assign x_bot_im = X_Im[i_bot];
 	
+		
 	
 	// Instantiate the Unit Under Test (UUT)
 	FFT1024 uut (

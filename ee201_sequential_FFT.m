@@ -40,6 +40,9 @@ end
 
 %% hw_cooleytukey
 X = y(1:N);
+% IFFT Mode
+X = imag(fft(y,1024)) + 1i*real(fft(y,1024));
+
 n = N;
 m = log2(N);
 
@@ -57,7 +60,10 @@ for i=0:size(X,1)-1
     %[X(i+1)]
     tmp(reversed+1) = X(i+1);
 end
-x_re = round(tmp.*S);
+x_re = round(real(tmp.*S));
+x_im = round(imag(tmp.*S));
+
+            [[0:7]' [x_re(1); x_re(2); x_re(3); x_re(4); x_re(5); x_re(6); x_re(7); x_re(8)] [x_im(1); x_im(2); x_im(3); x_im(4); x_im(5); x_im(6); x_im(7); x_im(8)]]
 
 tick = 0;
 n_passes = m;
@@ -91,7 +97,7 @@ for i=0:n_passes-1
             bot_re = (ac-bd)/S;
             bot_im = (ad+bc)/S;
             
-            [[0:7]' [x_re(1); x_re(5); x_re(3); x_re(7); x_re(2); x_re(6); x_re(4); x_re(8)]]
+            [[0:7]' [x_re(1); x_re(2); x_re(3); x_re(4); x_re(5); x_re(6); x_re(7); x_re(8)] [x_im(1); x_im(2); x_im(3); x_im(4); x_im(5); x_im(6); x_im(7); x_im(8)]]
 
             x_re(i_top) = round(top_re+bot_re);
             x_im(i_top) = round(top_im+bot_im);
@@ -112,6 +118,13 @@ disp 'Hw'
 disp '=='
 [x_re(1:vis) x_im(1:vis)]
 %x(1:vis)
+
+%% HW IFFT
+c = ifft(a);
+d = fft(x_im+1i*x_re);
+disp 'Expected              Computed           Got'
+disp '========              ========           ==='
+[ y(1:vis) imag(d(1:vis)/S/1024) ]
 
 %% Generate LUT test bench
 clc
@@ -134,7 +147,7 @@ for i=0:N-1
     if(a(i+1)<0)
         fprintf('-');
     end
-    fprintf('32''d%d;', abs(real(round(S*a(i+1)))));
+    fprintf('32''d%d; ', abs(real(round(S*a(i+1)))));
 end
 fprintf('\n');
 for i=0:N-1
@@ -143,6 +156,37 @@ for i=0:N-1
         fprintf('-');
     end
     fprintf('32''d%d; ', 0);
+end
+
+%% Generate IFFT HW TB
+clc
+a = fft(y(1:N));
+for i=0:N-1
+    inorder = dec2bin(i);
+    while size(inorder,2) < m
+        inorder = ['0' inorder];
+    end
+    reversed = bin2dec(fliplr(inorder));
+    
+    fprintf('X_Re[%d]=', reversed);
+    if(real(a(i+1))<0)
+        fprintf('-');
+    end
+    fprintf('32''d%d; ', abs(real(round(S*a(i+1)))));
+end
+fprintf('\n');
+for i=0:N-1
+    inorder = dec2bin(i);
+    while size(inorder,2) < m
+        inorder = ['0' inorder];
+    end
+    reversed = bin2dec(fliplr(inorder));
+    
+    fprintf('X_Im[%d]=', reversed);
+    if(imag(a(i+1))<0)
+        fprintf('-');
+    end
+    fprintf('32''d%d; ', abs(imag(round(S*a(i+1)))));
 end
 
 %% Generate unpacked array in fft with Bit Reversal
