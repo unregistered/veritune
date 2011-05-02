@@ -28,7 +28,7 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 \setcounter{page}{1}
 %\ninept  % 9-pt size optional (10-pt default)
 
-\title{Veritune: Auto-Tuning in Verilog}
+\title{Veritune: Digital Phase Vocoder}
 \name{Chris Li, Grayson Smith, Carey Zhang}
 \address{github.com/unregistered/speakurity}
 
@@ -37,7 +37,10 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 \maketitle
 %
 \begin{abstract}
-	For our EE201 final Verilog project, we implement pitch shifting in hardware.
+	For our EE201 final Verilog project, we implemented pitch shifting on the FPGA. We wrote a 1024-point Radix-2 Decimation
+	in Time Fast Fourier Transform module, which we integrated into a phase vocoder.  The phase vocoder allows us to do
+	the actual pitch shifting. The device accepts a WAV file through FileIO and shifts the pitch based on the values of the 
+	switches.  It then returns the shifted file to the computer.
 \end{abstract}
 
 %
@@ -46,7 +49,11 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 %
 %
 \section{Introduction}
-  Something on the phase vocoder \cite{bib:guitarpitchshifter}.
+  The phase vocoder has many uses in the music industry, both as a correction tool and as an audio effect.
+  When combined with a pitch detection algorithm, it can shift the input signal to the nearest whole pitch, an effect known as auto-tuning.
+  If the shift can be performed in under 50 milliseconds, the delay won't be perceptible and can be used for live performances \cite{bib:guitarpitchshifter}.
+  
+
   
 %
 %
@@ -94,7 +101,7 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
   Another feature of this implementation is the bit re-ordering, as shown in the figure. Because the algorithm computes the
   FFT in-place, we must re-order the input data.  On software systems this is less desirable but in hardware we can do this
   in one clock or re-index our data.  The re-ordered index is simply the old order backwards in binary.  As such, 
-  10'b0000000001 becomes 10'b1000000000, or 10'd512.
+  \lstinline!10'b0000000001! becomes \lstinline!10'b1000000000!, or \lstinline!10'd512!.
   
   
   
@@ -109,29 +116,49 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 %
 %
 \section{Phase Vocoder}
-  Something
+  The most basic way of shifting pitch is to simply speedup or slowdown the playback. For instance, we can shift the pitch
+  by one octave if we playback twice as fast.  
+  However, this is undesirable because the duration will now be twice as short.  
+  The phase vocoder allows us to change the pitch of a signal without affecting speed.
+  It makes use of the Short-Time Fourier Transform to analyze a segment of the input signal, scales the frequencies accordingly,
+  and outputs the modified signal using the overlap-add method. The process is shown in figure \ref{fig:vocoder}.
   \begin{figure}[h]
   \includegraphics[width=75mm]{images/vocoder.png}
   \caption{Processes involved in a phase vocoder \cite{bib:guitarpitchshifter}.}  
   \label{fig:vocoder}
   \end{figure}
+  
+  However, this technique introduces audio artifacts at the edges of overlaps.  Therefore, we also multiply our input
+  segment with a Hanning window, which is a cosine function that resembles a bell curve.  This helps smooth the output
+  signal.
+  
+  \subsection{Hardware Implementation}
+  Todo
 
 %
 %
 % Top level stuff
 %
 %
-\section{Top Level}
-  Something on wav files
+\section{Interface}
+  We receive WAV audio using FileIO provided by the TAs. On the board we provide switches to specify the amount of shift
+  and we use the seven segment display to show the current state.
+  
+  \subsection{WAV Audio}
+  WAV audio is a RIFF bitstream format.  As such there are various ways to configure a WAV audiostream \cite{bib:wav}. 
+  For our device we have chosen to accept a mono 16-bit PCM WAV audio file with a sampling rate of 44.1 kilosamples per second.
+  The data headers go from byte 0 to byte 43 and the data starts at byte 44.  The audio data is in the little endian byte order.
+  
+  \subsection{Hardware Implementation}
+  Todo
 
 
 %
-\section{conclusion}
-We have explored the theory behind noise removal using Fourier Transforms and shown how to remove noise using noise gating.  Using 
-\textsc{Matlab}, we created simple waves, added noise, and removed it to restore the wave.  We then 
-looked at real waves with non-Gaussian noise and developed a method to remove it that uses lookahead with a window function, noise 
-profiles, and short-time Fourier Transforms. 
-
+\section{Conclusion}
+We have created a simple phase vocoder in Verilog. There are many possible uses for such a device that can be achieved
+with minor modifications. A basic guitar pitch shifting pedal can be made if the effect can be applied live. 
+To increase the speed of the process, we can add more Butterfly units to reduce the amount of time needed in the FFT.  
+If we add a pitch detector, we can create an auto-tuner. 
 
 \bibliographystyle{IEEEbib}
 \begin{thebibliography}{10}
@@ -141,5 +168,6 @@ profiles, and short-time Fourier Transforms.
 \bibitem[4]{bib:butterfly} Takala, J. and K. Punkka, ``Butterfly Unit Supporting Radix-4 and Radix-2 FFT," \url{http://ticsp.cs.tut.fi/images/4/48/Cr1028-riga.pdf}
 \bibitem[5]{bib:fftdit} \url{http://cnx.org/content/m12016/latest/}
 \bibitem[6]{bib:ffttricks} \url{http://cnx.org/content/m12021/latest/}
+\bibitem[7]{bib:wav} \url{https://ccrma.stanford.edu/courses/422/projects/WaveFormat/}
 \end{thebibliography}
 \end{document}
