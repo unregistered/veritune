@@ -17,15 +17,15 @@ NET ClkPort  LOC = B8;
 NET Sw0  LOC = G18;
 NET Sw1  LOC = H18;
 NET Sw2  LOC = K18;
-#NET Sw3  LOC = K17;
-#NET Sw4  LOC = L14;
-#NET Sw5  LOC = L13;
-#NET Sw6  LOC = N17;
+NET Sw3  LOC = K17;
+NET Sw4  LOC = L14;
+NET Sw5  LOC = L13;
+NET Sw6  LOC = N17;
 NET Sw7  LOC = R17;
 
 NET Ld0  LOC = J14;
 NET Ld1  LOC = J15;
-#NET Ld2  LOC = K15;
+NET Ld2  LOC = K15;
 NET Ld3  LOC = K14;
 NET Ld4  LOC = E17;
 NET Ld5  LOC = P15;
@@ -52,12 +52,50 @@ NET Cg  LOC = H14;
 
 NET Dp  LOC = C17;
 
-#NET SDIN LOC = R27;
-#NET SCLK LOC = R29;
-#NET LRCK LOC = R31;
-#NET MCLK LOC = R33;
+# Speaker PMOD
+#NET SDIN LOC = M13;
+#NET SCLK LOC = R18;
+#NET LRCK LOC = R15;
+#NET MCLK LOC = T17;
 
+# MIC PMOD
+#NET SS LOC = L15;
+#NET MISO LOC = L17;
+#NET SCK LOC = M15;
 
 # NET "clk_port" TNM_NET = "clk_port";
 NET "ClkPort" PERIOD = 20.0ns HIGH 50%;
 NET "Btn3" CLOCK_DEDICATED_ROUTE = FALSE; 
+
+###################################################################################
+# Pin assignment for UsbCtl 
+# Connected to Nexys2 onBoard USB controller 
+NET "EppAstb" LOC= "V14"; # Bank = 2 , Pin name = IP_L23P_2 , Type = INPUT , Sch name = U-FLAGA
+NET "EppDstb" LOC= "U14"; # Bank = 2 , Pin name = IP_L23N_2 , Type = INPUT , Sch name = U-FLAGB
+
+NET "EppWR"       LOC = "V16"; # Bank = 3
+
+NET "EppAstb" CLOCK_DEDICATED_ROUTE = FALSE;
+NET "EppDstb" CLOCK_DEDICATED_ROUTE = FALSE;
+
+NET "EppWait" LOC= "N9";  # Bank = 2 , Pin name = IO_L12P_2/D7/GCLK12 , Type = DUAL/GCLK , Sch name = U-SLRD
+
+NET "EppDB<0>" LOC= "R14"; # Bank = 2 
+NET "EppDB<1>" LOC= "R13"; # Bank = 2 
+NET "EppDB<2>" LOC= "P13"; # Bank = 2 
+NET "EppDB<3>" LOC= "T12"; # Bank = 2 
+NET "EppDB<4>" LOC= "N11"; # Bank = 2 
+NET "EppDB<5>" LOC= "R11"; # Bank = 2 
+NET "EppDB<6>" LOC= "P10"; # Bank = 2 
+NET "EppDB<7>" LOC= "R10"; # Bank = 2 
+
+#  NET "UsbDB<0>" LOC= "R14"; # Bank = 2 , Pin name = IO_L24N_2/A20 , Type = DUAL , Sch name = U-FD0
+#  NET "UsbDB<1>" LOC= "R13"; # Bank = 2 , Pin name = IO_L22N_2/A22 , Type = DUAL , Sch name = U-FD1
+#  NET "UsbDB<2>" LOC= "P13"; # Bank = 2 , Pin name = IO_L22P_2/A23 , Type = DUAL , Sch name = U-FD2
+#  NET "UsbDB<3>" LOC= "T12"; # Bank = 2 , Pin name = IO_L20P_2 , Type = I/O , Sch name = U-FD3
+#  NET "UsbDB<4>" LOC= "N11"; # Bank = 2 , Pin name = IO_L18N_2 , Type = I/O , Sch name = U-FD4
+#  NET "UsbDB<5>" LOC= "R11"; # Bank = 2 , Pin name = IO , Type = I/O , Sch name = U-FD5
+#  NET "UsbDB<6>" LOC= "P10"; # Bank = 2 , Pin name = IO_L15N_2/D1/GCLK3 , Type = DUAL/GCLK , Sch name = U-FD6
+#  NET "UsbDB<7>" LOC= "R10"; # Bank = 2 , Pin name = IO_L15P_2/D2/GCLK2 , Type = DUAL/GCLK , Sch name = U-FD7
+
+###################################################################################
