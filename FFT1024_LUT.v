@@ -519,6 +519,7 @@ module FFT1024_LUT(n, twiddle);
 		10'd509: twiddle = {-16'd32761   , -16'd603     }; //i=509 n=1024 twiddle= -9.998306e-01   + i -1.840673e-02
 		10'd510: twiddle = {-16'd32765   , -16'd402     }; //i=510 n=1024 twiddle= -9.999247e-01   + i -1.227154e-02
 		10'd511: twiddle = {-16'd32766   , -16'd201     }; //i=511 n=1024 twiddle= -9.999812e-01   + i -6.135885e-03
+		default: twiddle = 'bX;
 		endcase
 	end
 

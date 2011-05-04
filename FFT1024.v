@@ -28,6 +28,7 @@ module FFT1024(
 	
 	//	States
 	reg [3:0] state;
+
 	localparam INIT = 4'b1000, LOAD = 4'b0100, PROC = 4'b0010, DONE = 4'b0001, UNK = 4'bXXXX;
 	wire Init, Load, Proc;
 	assign {Init, Load, Proc, Done} = state;
