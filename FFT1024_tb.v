@@ -27,6 +27,7 @@ module FFT1024_tb_v;
 	assign x7 = X_Re[7];	
 	
 	// Internal
+	reg [31:0] count;
 	wire signed [31:0] y_top_re;
 	wire signed [31:0] y_top_im;
 	wire signed [31:0] y_bot_re;
@@ -46,10 +47,10 @@ module FFT1024_tb_v;
 		.Reset(Reset),
 		.Start(Start),
 		.Ack(Ack),
-		.x_top_re(X_Re[i_top]),
-		.x_top_im(X_Im[i_top]),
-		.x_bot_re(X_Re[i_bot]),
-		.x_bot_im(X_Im[i_bot]),
+		.x_top_re(x_top_re),
+		.x_top_im(x_top_im),
+		.x_bot_re(x_bot_re),
+		.x_bot_im(x_bot_im),
 		//	Outs
 		.i_top(i_top),
 		.i_bot(i_bot),
@@ -59,6 +60,22 @@ module FFT1024_tb_v;
 		.y_bot_im(y_bot_im),
 		.Done(Done),
 		.state(state)
+	);
+	
+	reg1024 registers (
+		.Clk      (Clk),
+		.Reset		(Reset),
+		.i_top    (i_top),
+		.i_bot    (i_bot),
+		.write_en (state[1]),
+		.x_top_re (y_top_re),
+		.x_top_im (y_top_im),
+		.x_bot_re (y_bot_re),
+		.x_bot_im (y_bot_im),
+		.y_top_re (x_top_re),
+		.y_top_im (x_top_im),
+		.y_bot_re (x_bot_re),
+		.y_bot_im (x_bot_im)
 	);
 	
 	
@@ -81,6 +98,19 @@ module FFT1024_tb_v;
 	begin
 		timestamp <= timestamp + 1;
 		case(state)
+			4'd8: // Init
+			begin
+				if (~count)
+				begin
+					i_top = count;
+					i_bot = {i_top[0], i_top[1], i_top[2], i_top[3], i_top[4], i_top[5], i_top[6], i_top[7], i_top[8], i_top[9]};
+					$display("top %d bot %d", i_top, i_bot);
+				end
+				else if (count == 512)
+				begin
+					Start <= 1; // STart the fft
+				end
+			end
 			4'd1: //Done
 			begin
 				$display("X[0]=%d + i%d", X_Re[0], X_Im[0]);
@@ -103,6 +133,7 @@ module FFT1024_tb_v;
 				X_Im[i_top] <= y_top_im;
 				X_Re[i_bot] <= y_bot_re;
 				X_Im[i_bot] <= y_bot_im;
+				count <= count+1;
 			end
 		endcase
 	end
@@ -123,7 +154,9 @@ module FFT1024_tb_v;
 		#10
 		Reset = 0;
 		#10
+		// Transfer data to the registers
 		
+		count = 0;
 		Start = 1;
 		#130
 		Start = 0;
