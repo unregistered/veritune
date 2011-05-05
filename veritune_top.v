@@ -6,8 +6,8 @@
 module veritune_top(ClkPort,
 			St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar,
 			Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0,
-			//Btn0, Btn1, Btn2, Btn3,
-			Btn0, Btn3,
+//			Btn0, Btn1, Btn2, Btn3,
+			Btn0, Btn1, Btn3,
 			Ld0, Ld1, Ld2, Ld3, Ld4, Ld5, Ld6, Ld7,
 			An0, An1, An2, An3,
 			Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp,
@@ -23,7 +23,7 @@ module veritune_top(ClkPort,
 	// Project Specific Inputs
 //	input Btn0, Btn1, Btn2, Btn3;
 	input Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0;
-	input		Btn0, Btn3;	
+	input		Btn0, Btn1, Btn3;	
 //	input		Sw7, Sw2, Sw1, Sw0;	
 	
 	/*  OUTPUTS */
@@ -67,12 +67,12 @@ module veritune_top(ClkPort,
    reg [7:0] busEppInternal; //internal bus (before tristate)
   //------------------------------------------------------------------------------------------------------------------
    wire [9:0]  Addr; // address going to user register file here it is 4 bits
+	reg  [15:0] Data_to;
+	wire [15:0] Data_from; //data to be written to reg file 
+	wire [16:0] Data_rd, Data_Re, Data_Im;
    //reg We; // Write Enable, Read Enable; //control signals to user reg file
-   reg  [15:0] Data_to;
-	wire [15:0] Data_from; //data to be written to reg file
   //-----------------------------------------------------------------------------------------------------------------  
    reg [20:0] state;    //for the one hot state assignment
-   reg [31:0] regarray [0:1023]; //declaration of 16 x 32 bit register array
    reg [3:0] regfile [0:7]; // the register array to manipulate bits
   
 	//state declarations
@@ -117,43 +117,12 @@ module veritune_top(ClkPort,
 	reg [2:0] nib_count; //to count the nibbles
 	reg [7:0] nib_on_file; //show the nibbles on the file
 	wire [9:0] show_addr;
+	wire Btn0_db;
+	wire Done;
 
 	//intermediate signals for data conversion
 	reg [3:0] BINARY, binary_in;
 	reg [7:0] ASCII, ascii_out;
-	
-//---------------------------------------------------------------------------	
-	// For FFT
-	// For FFT
-//	wire signed [PRE-1:0] X_Re [1023:0];
-	wire signed [PRE-1:0] X_Im [1023:0];
-	// Outputs
-	wire Done;
-	wire signed [31:0] x_top_re;
-	wire signed [31:0] x_top_im;
-	wire signed [31:0] x_bot_re;
-	wire signed [31:0] x_bot_im;	
-	wire signed [31:0] x0, x1, x2, x3, x4, x5, x6, x7;
-	assign x0 = regarray[0];
-	assign x1 = regarray[1];
-	assign x2 = regarray[2];
-	assign x3 = regarray[3];
-	assign x4 = regarray[4];
-	assign x5 = regarray[5];
-	assign x6 = regarray[6];
-	assign x7 = regarray[7];	
-	
-	// Internal
-	wire signed [31:0] y_top_re;
-	wire signed [31:0] y_top_im;
-	wire signed [31:0] y_bot_re;
-	wire signed [31:0] y_bot_im;
-	wire [9:0]  i_top, i_bot;
-	assign x_top_re = regarray[i_top];
-	assign x_top_im = X_Im[i_top];
-	assign x_bot_re = regarray[i_bot];
-	assign x_bot_im = X_Im[i_bot];
-//-------------------------------------------------------------------------
 
 	// Clk signal travels throughout our design,
 	// it is necessary to provide global routing to this signal. 
@@ -163,21 +132,11 @@ module veritune_top(ClkPort,
 
 	assign Reset = Btn3;
 	
-	// In this design, we run the core design at full 50MHz clock!
-	assign	sys_clk = board_clk;
-	
 	// Disable the two memories on the board, since they are not used in this design
 	assign {St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar} = {5'b11111};
-//	assign {Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp} = {8{1}}; //disable cathodes
 	
     //assign switches to LED's (just like that)	
-//	assign {Ld7, Ld6, Ld5, Ld4, Ld3, Ld2, Ld1, Ld0} = {Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
-	assign {Ld7, Ld6, Ld5, Ld4, Ld3, Ld2, Ld1, Ld0} = {6'b111111, Btn0, Done};
-//	assign {An0,An1,An2,An3} = {Btn0,Btn1,Btn2,Btn3};
-	
-//	// LED assignments
-//	assign {Ld7, Ld6, Ld5, Ld4} = {4'b1111};
-//	assign {Ld1, Ld0} = {Reset, Btn0}; // reset is driven by Btn3
+	assign {Ld7, Ld6, Ld5, Ld4, Ld3, Ld2, Ld1, Ld0} = {5'b00000, Btn1, Btn0, Done};
 	
 	assign Addr = pointer; //address to the register array
 	
@@ -199,15 +158,22 @@ module veritune_top(ClkPort,
 			DIV_CLK <= DIV_CLK + 1'b1;
 	end
 	
+	// In this design, we run the core design at full 50MHz clock!
+	assign	sys_clk = board_clk;
+	
 	// SSDs
-	assign SSD3 = regarray[show_addr][15:12];
-	assign SSD2 = regarray[show_addr][11:8];
-	assign SSD1 = regarray[show_addr][7:4];
-	assign SSD0 = regarray[show_addr][3:0];
-//	assign SSD3 = (~Btn0) ? regarray[show_addr][31:28] : regarray[show_addr][15:12];
-//	assign SSD2 = (~Btn0) ? regarray[show_addr][27:24] : regarray[show_addr][11:8];
-//	assign SSD1 = (~Btn0) ? regarray[show_addr][23:20] : regarray[show_addr][7:4];
-//	assign SSD0 = (~Btn0) ? regarray[show_addr][19:16] : regarray[show_addr][3:0];
+//	assign SSD3 = (Btn1) ? Data_Re[15:12] : Data_rd[15:12];
+//	assign SSD2 = (Btn1) ? Data_Re[11:8]  : Data_rd[11:8];
+//	assign SSD1 = (Btn1) ? Data_Re[7:4]   : Data_rd[7:4];
+//	assign SSD0 = (Btn1) ? Data_Re[3:0]   : Data_rd[3:0];
+	assign SSD3 = Data_rd[15:12];
+	assign SSD2 = Data_rd[11:8];
+	assign SSD1 = Data_rd[7:4];
+	assign SSD0 = Data_rd[3:0];
+//	assign SSD3 = Data_Re[15:12];
+//	assign SSD2 = Data_Re[11:8];
+//	assign SSD1 = Data_Re[7:4];
+//	assign SSD0 = Data_Re[3:0];
 	
 	// need a scan clk for the seven segment display 
 	// 191Hz (50MHz / 2^18) works well
@@ -308,8 +274,8 @@ module veritune_top(ClkPort,
    always @(*) // for nibble on file
 	begin	
 		case(nib_count)
-			'h8: nib_on_file = 'h0D; //carriage return --0D
-			'h9: nib_on_file = 'h0A; //line feed --0A
+			'h4: nib_on_file = 'h0D; //carriage return --0D
+			'h5: nib_on_file = 'h0A; //line feed --0A
 			default: nib_on_file = ascii_out; //the nibble being read from register array
 		endcase
 	end
@@ -360,22 +326,6 @@ module veritune_top(ClkPort,
 			'h2: BINARY = Data_from[7:4];
 			'h1: BINARY = Data_from[11:8];
 			default: BINARY = Data_from[15:12];
-//			'h7: BINARY = Data_from[3:0];
-//			'h6: BINARY = Data_from[7:4];
-//			'h5: BINARY = Data_from[11:8];
-//			'h4: BINARY = Data_from[15:12];
-//			'h3: BINARY = Data_from[19:16];
-//			'h2: BINARY = Data_from[23:20];
-//			'h1: BINARY = Data_from[27:24];
-//			default: BINARY = Data_from[31:28];
-//		   'h7: BINARY = Data_from[31:28];
-//		   'h6: BINARY = Data_from[27:24];
-//		   'h5: BINARY = Data_from[23:20];
-//		   'h4: BINARY = Data_from[19:16];
-//		   'h3: BINARY = Data_from[15:12];
-//		   'h2: BINARY = Data_from[11:8];
-//		   'h1: BINARY = Data_from[7:4];
-//		   default: BINARY = Data_from[3:0];
 		endcase
 	end
 	//*******************************************************************************
@@ -387,16 +337,6 @@ module veritune_top(ClkPort,
 	   if(En_reg_wr)
 			regfile[nib_count] <= binary_in;
 	end
-	//********************************************************************
-	//to write to the target register file
-	always @(posedge sys_clk)
-	begin
-	   if(En_wr)
-			regarray[Addr]<= Data_to;
-	end
-	//***********************************************************************
-	//reading from the target register file
-	//assign Data_from = regarray[Addr]; //reading continuously
 	
 	// Epp signals
 	// Port signals
@@ -440,7 +380,7 @@ module veritune_top(ClkPort,
 		   A_int3 <= 8'bxxxxxxxx;
 		   ASCII  <= 8'bxxxxxxxx;
          regVer <= 8'bxxxxxxxx;
-         regEppAdr <= 8'bxxxxxxxx;		
+         regEppAdr <= 8'bxxxxxxxx;	
 		end
 		else
 		begin
@@ -488,11 +428,13 @@ module veritune_top(ClkPort,
 					end	
 					else						
 						if (Astb_SS & Dstb_SS)
+						begin
 							state <= Idle;
-				end
-				
+						end
+					end
+					
 				//DPU RTL				
-				i <= 0;   
+				i <= 0;
 			end
 			A_Rd_finish:
 			begin	
@@ -685,30 +627,37 @@ module veritune_top(ClkPort,
 				//DPU RTL
 				pointer <= pointer + 1;
 				nib_count <= 0;
+//				if (pointer == 10'b111_111_1111)
+//				begin
+//					IODone <= 1'b1;
+//				end
 			end
 			default: state <= Idle;
 		endcase
 		end
 	end
 	
+//	always @ (posedge sys_clk)
+//	begin
+//		if (Btn0)
+//			regarray[1023] <= 32'b1111_1111_1111_1111_1111_1111_1111_1111;
+//	end
+	ee201_debouncer #(.N_dc(24)) ee201_debouncer_2 
+        (.CLK(board_clk), .RESET(Reset), .PB(Btn0), .DPB( ), 
+		.SCEN(Btn0_db), .MCEN( ), .CCEN( )); 
 	
-	FFT1024 uut (
-		//	Ins
+	veritune_sm core (
 		.Clk(sys_clk),
 		.Reset(Reset),
-		.Start(Btn0),
-		.Ack(Btn0),
-		.x_top_re(regarray[i_top]),
-		.x_top_im(X_Im[i_top]),
-		.x_bot_re(regarray[i_bot]),
-		.x_bot_im(X_Im[i_bot]),
-		//	Outs
-		.i_top(i_top),
-		.i_bot(i_bot),
-		.y_top_re(y_top_re),
-		.y_top_im(y_top_im),
-		.y_bot_re(y_bot_re),
-		.y_bot_im(y_bot_im),
+		.Addr_Wr(Addr),
+		.Addr_Rd(show_addr),
+		.En_wr(En_wr),
+		.Data_in(Data_to),
+		.Data_wout(Data_from),
+		.Data_rout(Data_rd),
+//		.Data_Re(Data_Re),
+//		.Data_Im(),
+		.Start(Btn0_db),
 		.Done(Done)
 	);
 

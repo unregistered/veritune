@@ -2,104 +2,90 @@
 // By Chris Li, Grayson Smith, and Carey Zhang.
 `timescale 1ns / 1ps
 
-module veritune_sm(Clk, Reset, Rec, Stop, Play, Done_Shift, Freq, Audio_In, q_I, q_Rec, q_Stop, q_Shift, q_Play, Audio_Out);
+module veritune_sm(Clk, Reset, Addr_Wr, Addr_Rd, En_wr, Data_in, Start,
+		Done, Data_wout, Data_rout/*, Data_Re, Data_Im*/);
 	// inputs
-	input Clk, Reset, Rec, Stop, Play, Done_Shift;
-	input [7:0] Freq;
-	input [15:0] Audio_In;
+	input Clk, Reset;
+	input [9:0] Addr_Wr, Addr_Rd;
+	input En_wr, Start;
+	input wire [15:0] Data_in;
 	
 	// outputs
-	output reg [15:0] Audio_Out;
-	// store current state
-	output q_I, q_Rec, q_Stop, q_Shift, q_Play;
-	reg [4:0] state;
-	assign {q_Play, q_Shift, q_Stop, q_Rec, q_I} = state;
+	output [15:0] Data_wout, Data_rout;//, Data_Re, Data_Im;
+	output Done;
 	
 	// local
-	localparam I = 5'b00001, REC = 5'b00010, STOP = 5'b00100, SHIFT = 5'b01000, PLAY = 5'b10000, UNK = 5'bXXXXX;
-	localparam LENGTH = 131070;	// 2^17-2, max number of samples -2
-	reg [15:0] audio_data[16:0];	// unpacked array of N-bits
-	reg [16:0] index;
-	reg [16:0] length;	// actually length recorded -1
+	reg [31:0] regarray [0:1023];
 	
-	wire [15:0] fft_in0, fft_in1, fft_in2, fft_in3;
-	wire [31:0] fft_outRe0, fft_outRe1, fft_outRe2, fft_outRe3;
-	wire [31:0] fft_outIm0, fft_outIm1, fft_outIm2, fft_outIm3;
+//	reg signed [31:0] X_Re [1023:0];
+	reg signed [31:0] X_Im [1023:0];
+	
+	// fft outputs
+	wire signed [31:0] x_top_re;
+	wire signed [31:0] x_top_im;
+	wire signed [31:0] x_bot_re;
+	wire signed [31:0] x_bot_im;	
+	
+	// fft internal
+	wire signed [31:0] y_top_re;
+	wire signed [31:0] y_top_im;
+	wire signed [31:0] y_bot_re;
+	wire signed [31:0] y_bot_im;
+	wire [9:0]  i_top, i_bot;
+	wire write_en;
+	assign write_en = 1;
+	assign x_top_re = regarray[i_top];
+	assign x_top_im = regarray[i_top];
+	assign x_bot_re = regarray[i_bot];
+	assign x_bot_im = regarray[i_bot];
+	
+	wire [3:0] state;
 
-	FFT4 fft4(
-		.X0(fft_in0),
-		.X1(fft_in1),
-		.X2(fft_in2),
-		.X3(fft_in3),
-		.Y0_Re(fft_outRe0),
-		.Y1_Re(fft_outRe1),
-		.Y2_Re(fft_outRe2),
-		.Y3_Re(fft_outRe3),
-		.Y0_Im(fft_outIm0),
-		.Y1_Im(fft_outIm1),
-		.Y2_Im(fft_outIm2),
-		.Y3_Im(fft_outIm3)
+//------------------------------------------------------------------------- 	
+	assign Data_wout = regarray[Addr_Wr];
+	assign Data_rout = regarray[Addr_Rd];
+//	assign Data_Re = X_Re[Addr_Rd];
+//	assign Data_Im = X_Im[Addr_Rd];
+//------------------------------------------------------------------------- 
+	// Instantiate the Unit Under Test (UUT)
+	FFT1024 uut (
+		//	Ins
+		.Clk(Clk),
+		.Reset(Reset),
+		.Start(Start),
+		.Ack(Start),
+		.x_top_re(x_top_re),
+		.x_top_im(x_top_im),
+		.x_bot_re(x_bot_re),
+		.x_bot_im(x_bot_im),
+		//	Outs
+		.i_top(i_top),
+		.i_bot(i_bot),
+		.y_top_re(y_top_re),
+		.y_top_im(y_top_im),
+		.y_bot_re(y_bot_re),
+		.y_bot_im(y_bot_im),
+		.Done(Done),
+		.state(state)
 	);
 
+
+//------------------------------------------------------------------------- 
 	// NSL and SM
-	always @ (posedge Clk, posedge Reset)
+	always @ (posedge Clk)
 	begin : NSL_AND_SM
-		if (Reset)
-		begin : RESET
-			state <= I;
-			index <= 0;
+		if (En_wr)
+			regarray[Addr_Wr] <= Data_in;
+			
+		if (state == 4'd2)	// in Proc state (defined in fft1024.v)
+		begin
+			if (write_en)
+			begin
+				regarray[i_top] <= y_top_re;
+				X_Im[i_top] <= y_top_im;
+				regarray[i_bot] <= y_bot_re;
+				X_Im[i_bot] <= y_bot_im; 
+			end
 		end
-		else
-		case (state)
-			I:
-			begin
-				// state transition logic
-				if (Rec)
-					state <= REC;
-				index <= 0;	
-			end
-			REC:
-			begin
-				// state transition logic
-				// TODO: handle if out of memory
-				if (Stop || (index==LENGTH))
-				begin
-					length <= index;
-					state <= STOP;
-				end
-					
-				// clear data first?
-				
-				// store data from audio input
-				audio_data[index] <= Audio_In;
-				//index <= index+1;
-			end
-			STOP:
-			begin
-				// state transition logic
-				if (Play)
-					state <= SHIFT;
-			end
-			SHIFT:
-			begin
-				// state transition logic
-				if (Done_Shift)
-					state <= PLAY;
-					
-				index <= 0;
-			end
-			PLAY:
-			begin
-				// state transition logic
-				if (Stop)// || index==length)
-					state <= STOP;
-					
-				// drive audio output
-				//Audio_Out <= Audio_Out+10;
-			end
-			default:
-				//state <= UNK;
-				state <= 5'b11111;
-		endcase
-	end 
+	end
 endmodule

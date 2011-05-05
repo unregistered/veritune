@@ -33,7 +33,7 @@ NET Ld6  LOC = F4;
 NET Ld7  LOC = R4;
 
 NET Btn0  LOC = B18;
-#NET Btn1  LOC = D18;
+NET Btn1  LOC = D18;
 #NET Btn2  LOC = E18;
 NET Btn3  LOC = H13;
 
