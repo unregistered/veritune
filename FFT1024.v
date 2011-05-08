@@ -24,8 +24,8 @@ module FFT1024(
 	//output wire Overflow
 );
 	//	Params
-	parameter N		= 1024;
-	parameter M		= 10;
+	parameter N		= 256;
+	parameter M		= 8;
 	
 	//	States
 //	reg [3:0] state;
