@@ -1,7 +1,5 @@
 function [outputVector] = veritune(inputVector, st)
-clc
 %scaling
-S = 2^15 - 1;
 
 step = 2*st;
 
@@ -33,6 +31,8 @@ num_slices = floor((length(x) - windowSize) / hop);
 % local changing of the source file to truncate and make sure only integer # of hop
 x = x(1:(((num_slices*hop)) + windowSize));
 
+vectorFrames = zeros(1020,1024);
+
 % Get vectorFrames
 for index = 1:num_slices
 
@@ -42,6 +42,13 @@ for index = 1:num_slices
     vectorFrames(index,:) = x(indexTimeStart: indexTimeEnd);
 
 end 
+
+outputy = zeros(1020,1024);
+% Initialize cumulative phase
+phaseCumulative = 0;
+
+% Initialize previous frame phase
+previousPhase = 0;
 
 for index=1:num_slices
 %ANALYSIS
@@ -57,7 +64,26 @@ currentFrameWindowedFFT = fft(currentFrameWindowed);
 %get magnitude
 magFrame = abs(currentFrameWindowedFFT);
 
-outputFrame = real(ifft(magFrame))*5;
+ phaseFrame = angle(currentFrameWindowedFFT);
+
+% Get the phase difference
+    deltaPhi = phaseFrame - previousPhase;
+    previousPhase = phaseFrame;
+    
+    % Remove the expected phase difference
+    deltaPhiPrime = deltaPhi - hop * 2*pi*(0:(windowSize-1))/windowSize;
+    
+    % Map to -pi/pi range
+    deltaPhiPrimeMod = mod(deltaPhiPrime+pi, 2*pi) - pi;
+     
+    % Get the true frequency
+    trueFreq = 2*pi*(0:(windowSize-1))/windowSize + deltaPhiPrimeMod/hop;
+
+    % Get the final phase
+    phaseCumulative = phaseCumulative + hopOut * trueFreq;   
+
+    
+outputFrame = real(ifft(magFrame .* exp(1i*phaseCumulative)));
 
 outputy(index,:) = outputFrame .* wn' / sqrt((windowSize/hopOut)/2);
 
@@ -85,17 +111,13 @@ vectorTime = zeros(num_frames*hopOut-hopOut+size_frames,1);
 
 % Loop for every fram and operlap-add
 for index=1:num_frames - 1
-    [index timeIndex timeIndex+size_frames-1 size(vectorTime)]
     vectorTime(timeIndex:timeIndex+size_frames-1) = vectorTime(timeIndex:timeIndex+size_frames-1) + outputy(index,:)';
 
     timeIndex = timeIndex + hopOut;
 
 end
-outputVector = vectorTime;
-%for k=1:step:(length(vectorTime) - 1)
-%    [k length(vectorTime)]
-%    outputVector = outputy(k,:);
-%end
 
+outputVector = vectorTime(1:2:end);
 
+%x(1:2:size(x,1));
 return
