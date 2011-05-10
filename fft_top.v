@@ -27,10 +27,7 @@ module fft_top(
 		.Start(Btn0_db),
 		.Inspect({Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0}),
 		
-		.Inspect_0(SSD0),
-		.Inspect_1(SSD1),
-		.Inspect_2(SSD2),
-		.Inspect_3(SSD3),
+		.Result({SSD3, SSD2, SSD1, SSD0}),
 		.ActivateSSD(ActivateSSD),
 		.Done(Ld0),
 		.Ready(Ld1)

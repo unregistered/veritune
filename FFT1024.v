@@ -120,13 +120,13 @@ module FFT1024(
 				//	Out: DONE
 				PROC:
 				begin
-//					$display("--Pass %d Block %d Butterflies %d and %d (i_top %d i_bot %d)", i, j, k, k+n_butterflies/2, i_top, i_bot);
-//					$display("----address %d twiddle %d+i%d", address, twiddle_re, twiddle_im);
-//					$display("----x[i_top] %d + %d i; x[i_bot] %d+%d i", x_top_re, x_top_im, x_bot_re, x_bot_im);
-//					$display("----ac=%d bd=%d ad=%d bc=%d", ac, bd, ad, bc);
-//					$display("------top_re %d top_im %d", top_re, top_im);
-//					$display("------bot_re %d bot_im %d", bot_re, bot_im);
-//					$display("----outputs y_top %d+i%d y_bot %d+i%d", y_top_re, y_top_im, y_bot_re, y_bot_im);
+					$display("--Pass %d Block %d Butterflies %d and %d (i_top %d i_bot %d)", i, j, k, k+n_butterflies/2, i_top, i_bot);
+					$display("----address %d twiddle %d+i%d", address, twiddle_re, twiddle_im);
+					$display("----x[i_top] %d + %d i; x[i_bot] %d+%d i", x_top_re, x_top_im, x_bot_re, x_bot_im);
+					$display("----ac=%d bd=%d ad=%d bc=%d", ac, bd, ad, bc);
+					$display("------top_re %d top_im %d", top_re, top_im);
+					$display("------bot_re %d bot_im %d", bot_re, bot_im);
+					$display("----outputs y_top %d+i%d y_bot %d+i%d", y_top_re, y_top_im, y_bot_re, y_bot_im);
 					
 				
 					//

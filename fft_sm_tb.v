@@ -5,17 +5,14 @@ module fft_sm_tb_v;
 	reg Clk;
 	reg Reset, Start, Ack;
 	reg [7:0] Inspect;
-	wire [3:0] Inspect_0, Inspect_1, Inspect_2, Inspect_3;
+	wire [15:0] Result;
 	
 	fft_sm uut (
     .Clk(Clk), 
     .Reset(Reset), 
     .Start(Start), 
     .Inspect(Inspect), 
-    .Inspect_0(Inspect_0), 
-    .Inspect_1(Inspect_1), 
-    .Inspect_2(Inspect_2), 
-    .Inspect_3(Inspect_3), 
+    .Result(Result), 
 		.ActivateSSD(),
 		.Ready(Ready),
     .Done(Done)
@@ -35,17 +32,17 @@ module fft_sm_tb_v;
 		Clk = ~ Clk; 
 	end
 	
+	always @(posedge Clk)
+	begin
+		if(Ready)
+			Start = 1;
+	end
+	
 	initial
 	begin
 		#200
 		Reset = 0;
 		Inspect = 8'd0;
-		#50
-		Inspect = 8'd1;
-		#50
-		Inspect = 8'd2;
-		#50
-		Inspect = 8'd3;
 	end
 	
 endmodule

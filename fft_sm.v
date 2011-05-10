@@ -4,7 +4,7 @@ module fft_sm(
 	input wire Start,
 	input wire [7:0] Inspect,
 	
-	output reg [3:0] Inspect_0, Inspect_1, Inspect_2, Inspect_3,
+	output reg [15:0] Result,
 	output wire ActivateSSD,
 	output wire Ready,
 	output wire Done
@@ -13,7 +13,7 @@ module fft_sm(
 	reg signed [31:0] X_Im [255:0];
 	wire [9:0] i_top, i_bot;
 	wire [31:0] y_top_re, y_top_im, y_bot_re, y_bot_im;
-	reg [31:0] x_top_re, x_top_im, x_bot_re, x_bot_im;
+	//reg [31:0] x_top_re, x_top_im, x_bot_re, x_bot_im;
 	wire [3:0] fft_state;
 	reg [3:0] state;	
 	
@@ -30,59 +30,75 @@ module fft_sm(
 	localparam INIT = 4'b1000, IDLE = 4'b0100, PROC = 4'b0010, DONE = 4'b0001, UNK = 4'bXXXX;
 	
 	
-	//FFT1024 FFT (
-	//	.Clk(Clk),
-	//	.Reset(Reset),
-	//	.Start(Start),
-	//	.Ack(1'b0),
-	//	.x_top_re(x_top_re),
-	//	.x_top_im(x_top_im),
-	//	.x_bot_re(x_bot_re),
-	//	.x_bot_im(x_bot_im),
-  //
-	//	.i_top(i_top),
-	//	.i_bot(i_bot),
-	//	.y_top_re(y_top_re),
-	//	.y_top_im(y_top_im),
-	//	.y_bot_re(y_bot_re),
-	//	.y_bot_im(y_bot_im),
-	//	.Done(Done),
-	//	.state(fft_state)
-	//);
-	
-	// Allow user to explore
+	FFT1024 FFT (
+		.Clk(Clk),
+		.Reset(Reset),
+		.Start(Start),
+		.Ack(1'b0),
+		.x_top_re(X_Re[i_top]),
+		.x_top_im(X_Im[i_top]),
+		.x_bot_re(X_Re[i_bot]),
+		.x_bot_im(X_Im[i_bot]),
+  
+		.i_top(i_top),
+		.i_bot(i_bot),
+		.y_top_re(y_top_re),
+		.y_top_im(y_top_im),
+		.y_bot_re(y_bot_re),
+		.y_bot_im(y_bot_im),
+		.Done(Done),
+		.state(fft_state)
+	);
+		
+	// RTL
 	always @(posedge Clk)
 	begin
-		if(ActivateSSD)
-		begin
-			{Inspect_3, Inspect_2, Inspect_1, Inspect_0} = X_Re[Inspect][15:0];
-			$display("Actual value %b", X_Re[Inspect]);
-			
-		end
-	end
-	
-	// Write back
-	always @(posedge Clk)
-	begin
-		if(state == PROC)
-		begin
-			//X_Re[i_top] = y_top_re;
-			//X_Im[i_top] = y_top_im;
-			//X_Re[i_bot] = y_bot_re;
-			//X_Im[i_bot] = y_bot_im;
-			//x_top_re = X_Re[i_top];
-			//x_top_im = X_Im[i_top];
-			//x_bot_re = X_Re[i_bot];
-			//x_bot_im = X_Im[i_bot];
-			
-		end
-		else if(state == INIT)
+		if(state == INIT)
 		begin
 			X_Re[init_addr] <= x_re_init;
 			X_Im[init_addr] <= 32'd0;
+			$display("X[0]=%d + i%d", X_Re[0], X_Im[0]);
+			$display("X[1]=%d + i%d", X_Re[1], X_Im[1]);
+			$display("X[2]=%d + i%d", X_Re[2], X_Im[2]);
+			$display("X[3]=%d + i%d", X_Re[3], X_Im[3]);
+			$display("X[4]=%d + i%d", X_Re[4], X_Im[4]);
+			$display("X[5]=%d + i%d", X_Re[5], X_Im[5]);
+			$display("X[6]=%d + i%d", X_Re[6], X_Im[6]);
+			$display("X[7]=%d + i%d", X_Re[7], X_Im[7]);
+			
+		end
+		else if(state == PROC)
+		begin
+			if(~Done)
+			begin
+				X_Re[i_top] <= y_top_re;
+				X_Im[i_top] <= y_top_im;
+				X_Re[i_bot] <= y_bot_re;
+				X_Im[i_bot] <= y_bot_im;
+			end
+			$display("i_top %d i_bot %d", i_top, i_bot);
+			$display("X[0]=%d + i%d", X_Re[0], X_Im[0]);
+		end
+		else if(state == IDLE || state == DONE)
+		begin
+		$display("i_top %d i_bot %d", i_top, i_bot);
+		$display("y_top_re %d im %d", y_top_re, y_top_im);
+		
+			$display("X[0]=%d + i%d", X_Re[0], X_Im[0]);
+			$display("X[1]=%d + i%d", X_Re[1], X_Im[1]);
+			$display("X[2]=%d + i%d", X_Re[2], X_Im[2]);
+			$display("X[3]=%d + i%d", X_Re[3], X_Im[3]);
+			$display("X[4]=%d + i%d", X_Re[4], X_Im[4]);
+			$display("X[5]=%d + i%d", X_Re[5], X_Im[5]);
+			$display("X[6]=%d + i%d", X_Re[6], X_Im[6]);
+			$display("X[7]=%d + i%d", X_Re[7], X_Im[7]);
+
+			
+		 	Result = X_Re[Inspect][15:0];
 		end
 	end
 	
+	// States
 	always @ (posedge Clk)
 	begin
 		if(Reset)
