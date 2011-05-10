@@ -2,7 +2,7 @@
 clear
 clc
 load handel;
-N=1024; 
+N=256; 
 m = log2(N);
 vis = 8;
 S = 2^15-1;
@@ -38,10 +38,30 @@ for k=0:N/2-1
     fprintf('}; //i=%-2d n=%-2d twiddle= %-15d + i %d\n', k, N, real(exp(-2*pi*1i*k/N)), imag(exp(-2*pi*1i*k/N)));
 end
 
+%% Meminit
+clc
+fprintf('.INIT_00(256''h');
+for i=1:256
+    num = round(y(i)*S);
+    if num<0
+        %take compliment 
+        num = abs(num);
+        show = dec2hex(bitcmp(num,32));
+    else
+        show = dec2hex(num,8);
+    end
+    fprintf('%s_', show);
+    if(~mod(i,8) && i>1 && i~=256)
+        fprintf(';\n');
+        fprintf('.INIT_%s(256''h', dec2hex(i/8, 2));
+    end
+end
+fprintf(';\n');
+
 %% hw_cooleytukey
 X = y(1:N);
 % IFFT Mode
-X = imag(fft(y,1024)) + 1i*real(fft(y,1024));
+%X = imag(fft(y,1024)) + 1i*real(fft(y,1024));
 
 n = N;
 m = log2(N);
@@ -87,22 +107,38 @@ for i=0:n_passes-1
             fprintf('      k=%d n=%d twiddle=%d+i%d lut=%d+i%d twiddle_scale=%d\n', k, n_butterflies, real(twiddle), imag(twiddle), real(LUT(N/(2^(1+i))*k+1)), imag(LUT(N/(2^(1+i))*k+1)), N/(2^(1+i)))            
             fprintf('      x_top(%d) %d+i%d x_bot(%d) %d+i%d\n', i_top, x_re(i_top), x_im(i_top), i_bot, x_re(i_bot), x_im(i_bot));
 
-            ac = floor(x_re(i_bot)*twiddle_re);
-            bd = floor(x_im(i_bot)*twiddle_im);
-            ad = floor(x_re(i_bot)*twiddle_im);
-            bc = floor(x_im(i_bot)*twiddle_re);
+            ac = round(x_re(i_bot)*twiddle_re);
+            bd = round(x_im(i_bot)*twiddle_im);
+            ad = round(x_re(i_bot)*twiddle_im);
+            bc = round(x_im(i_bot)*twiddle_re);
+            
+            [ac bd ad bc]
             
             top_re = x_re(i_top);
             top_im = x_im(i_top);
-            bot_re = (ac-bd)/S;
-            bot_im = (ad+bc)/S;
+            bot_re = ((ac-bd)/(S-1));
+            bot_im = ((ad+bc)/(S-1));
+            
+            if bot_re < 0
+                bot_re = round(bot_re);
+            else
+                bot_re = fix(bot_re);
+            end
+            
+            if bot_im < 0
+                bot_im = round(bot_im);
+            else
+                bot_im = fix(bot_im);
+            end
+            
+            [top_re top_im bot_re bot_im]
             
             [[0:7]' [x_re(1); x_re(2); x_re(3); x_re(4); x_re(5); x_re(6); x_re(7); x_re(8)] [x_im(1); x_im(2); x_im(3); x_im(4); x_im(5); x_im(6); x_im(7); x_im(8)]]
 
-            x_re(i_top) = round(top_re+bot_re);
-            x_im(i_top) = round(top_im+bot_im);
-            x_re(i_bot) = round(top_re-bot_re);
-            x_im(i_bot) = round(top_im-bot_im);  
+            x_re(i_top) = (top_re+bot_re);
+            x_im(i_top) = (top_im+bot_im);
+            x_re(i_bot) = (top_re-bot_re);
+            x_im(i_bot) = (top_im-bot_im);  
             
             %fprintf('  --> ac=%d bd=%d ad=%d bc=%d\n', ac, bd, ad, bc);
 			%fprintf('    --> top_re %d top_im %d\n', top_re, top_im);
@@ -117,6 +153,15 @@ disp '=======               ==='
 disp 'Hw'
 disp '=='
 [x_re(1:vis) x_im(1:vis)]
+disp 'SSD'
+disp '==='
+for i=1:vis
+    ssd_re(i) = x_re(i);
+    if(ssd_re(i) < 0)
+        ssd_re(i) = bitcmp(abs(ssd_re(i)), 32);
+    end
+end
+[dec2hex(ssd_re(1:vis))]
 %x(1:vis)
 
 %% HW IFFT
@@ -157,6 +202,25 @@ for i=0:N-1
     end
     fprintf('32''d%d; ', 0);
 end
+
+%% Generate Initial LUT
+clc
+a = (y(1:N));
+for i=0:N-1
+    inorder = dec2bin(i);
+    while size(inorder,2) < m
+        inorder = ['0' inorder];
+    end
+    reversed = bin2dec(fliplr(inorder));
+    
+    fprintf('10''d%d: ', reversed);
+    fprintf('x_re = ');
+    if(a(i+1)<0)
+        fprintf('-');
+    end
+    fprintf('32''d%d;\n', abs(real(round(S*a(i+1)))));
+end
+
 
 %% Generate IFFT HW TB
 clc
