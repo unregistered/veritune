@@ -34,20 +34,23 @@ module fft_sm_tb_v;
 	
 	always @(posedge Clk)
 	begin:INSPECT
+		reg signed [15:0] sResult;
 		if(Ready)
 		begin
-			Inspect = 1;
-			$display("Inspection: Addr %d Result %h", Inspect, Result);
+			Start = 1;
 		end
-		else
-			Inspect = 1;
+		if(Done)
+		begin
+			$display("Done.");
+		end
 	end
 	
 	initial
 	begin
 		#200
-		Reset = 0;
 		Inspect = 8'd0;
+		#100 
+		Reset = 0;
 	end
 	
 endmodule

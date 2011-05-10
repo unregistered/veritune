@@ -2,7 +2,6 @@ module fft_top(
 	input ClkPort,
 	output St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar,
 	input Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0,
-	//Btn0, Btn1, Btn2, Btn3,
 	input Btn0, Btn1, Btn3,
 	output Ld0, Ld1, Ld2, Ld3, Ld4, Ld5, Ld6, Ld7,
 	output An0, An1, An2, An3,
@@ -27,13 +26,11 @@ module fft_top(
 		.Start(Btn0_db),
 		.Inspect({Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0}),
 		
-		.Inspect_0(SSD0),
-		.Inspect_1(SSD1),
-		.Inspect_2(SSD2),
-		.Inspect_3(SSD3),
+		.Result({SSD3, SSD2, SSD1, SSD0}),
 		.ActivateSSD(ActivateSSD),
 		.Done(Ld0),
-		.Ready(Ld1)
+		.Ready(Ld1),
+		.Overflow(Ld7)
 	);
 	
 	ssdhex ssd (
@@ -50,6 +47,6 @@ module fft_top(
 	
 	// Disable the memories
 	assign {St_ce_bar, St_rp_bar, Mt_ce_bar, Mt_St_oe_bar, Mt_St_we_bar} = {5'b11111};
-	assign { Ld2, Ld3, Ld4, Ld5, Ld6, Ld7} = {6'd0};
+	assign { Ld3, Ld4, Ld5, Ld6, Ld2 } = {5'd0};
 	
 endmodule

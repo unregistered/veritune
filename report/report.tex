@@ -37,10 +37,11 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 \maketitle
 %
 \begin{abstract}
-	For our EE201 final Verilog project, we implemented pitch shifting on the FPGA. We wrote a 1024-point Radix-2 Decimation
-	in Time Fast Fourier Transform module, which we integrated into a phase vocoder.  The phase vocoder allows us to do
-	the actual pitch shifting. The device accepts a WAV file through FileIO and shifts the pitch based on the values of the 
-	switches.  It then returns the shifted file to the computer.
+	For our EE201 final Verilog project, we attempt to implement a digital phase vocoder on the FPGA. 
+	We wrote a 256-point Radix-2 Decimation-in-Time Fast Fourier Transform module, which works in hardware.  
+	The phase vocoder allows us to do	the actual pitch shifting. Due to the limited resources on the board,
+	we had to implement the phase vocoder in software using \textsc{Matlab}. The software version utilizes a 
+	1024 point transform.
 \end{abstract}
 
 %
@@ -103,6 +104,38 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
   in one clock or re-index our data.  The re-ordered index is simply the old order backwards in binary.  As such, 
   \lstinline!10'b0000000001! becomes \lstinline!10'b1000000000!, or \lstinline!10'd512!.
   
+  \begin{figure}[h]
+  \includegraphics[width=75mm]{images/nexys2io.pdf}
+  \caption{Input/output of the data explorer front-end for the FFT.}  
+  \label{fig:io}
+  \end{figure}
+  
+  \subsection{Data Explorer}
+  In the data explorer mode, the switches act as binary inputs, allowing the user to address all 256 registers. The four SSD
+  displays show the least significant bits of the selected register. In the event of overflow, \lstinline!LD7! will light up.  The user
+  may explore the initial data, then press \lstinline!Btn0! to perform the Fast Fourier Transform of the data.
+  
+  In the final implementation, the butterfly unit (combinational logic) was separated from the index pointer logic. Block memory, 
+  in this case two instances of dual-port RAM, were used in place of registers, which improved the speed of synthesis at the
+  cost of clock cycles.  The final resource usage is summarized in table \ref{tab:usage}. The minimum period is 13.8 ns (72.14 MHz)
+  and the critical path runs through the butterfly unit.
+  
+  \begin{table}[h]
+  \begin{tabular}{l  r  r  r}
+                                        & Used  & Avail. & Perc. \\
+   Number of Slices:                    &  684  & 4656  &  14\%  \\
+   Number of Slice Flip Flops:          &  198  & 9312  &   2\%  \\
+   Number of 4 input LUTs:              & 1316  & 9312  &  14\%  \\
+   Number of IOs:                       &   37  &       &      \\
+   Number of bonded IOBs:               &   36  &  232  &  15\%  \\
+   Number of BRAMs:                     &    2  &   20  &  10\%  \\
+   Number of MULT18X18SIOs:             &   10  &   20  &  50\%  \\
+   Number of GCLKs:                     &    2  &   24  &   8\%  \\
+ \end{tabular}
+ \caption{Resource usage.}
+ \label{tab:usage}
+ \end{table}
+  
   
   
   \subsection{The Inverse Transform}
@@ -132,33 +165,25 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
   segment with a Hanning window, which is a cosine function that resembles a bell curve.  This helps smooth the output
   signal.
   
-  \subsection{Hardware Implementation}
-  Todo
-
-%
-%
-% Top level stuff
-%
-%
-\section{Interface}
-  We receive WAV audio using FileIO provided by the TAs. On the board we provide switches to specify the amount of shift
-  and we use the seven segment display to show the current state.
+  \subsection{Proposed Hardware Implementation}
+  Our design would take a 1024 bit chunk from the input audio register and transfer it to an intermediary register on which to perform
+  various calculations. Each window chunk will be windowed, run through the FFT module, have the various phase and magnitude values
+  calculated, run through the IFFT module, and then become windowed again with the phase and time changes in place. They can then either 
+  be placed back in the original register, or a specific output register. 
   
-  \subsection{WAV Audio}
-  WAV audio is a RIFF bitstream format.  As such there are various ways to configure a WAV audiostream \cite{bib:wav}. 
-  For our device we have chosen to accept a mono 16-bit PCM WAV audio file with a sampling rate of 44.1 kilosamples per second.
-  The data headers go from byte 0 to byte 43 and the data starts at byte 44.  The audio data is in the little endian byte order.
-  
-  \subsection{Hardware Implementation}
-  Todo
-
-
+%
+%
+% Conclusion
+%
 %
 \section{Conclusion}
-We have created a simple phase vocoder in Verilog. There are many possible uses for such a device that can be achieved
+We have created an FFT module in Verilog and a simple phase vocoder using \textsc{Matlab}. There are many possible uses for such a device that can be achieved
 with minor modifications. A basic guitar pitch shifting pedal can be made if the effect can be applied live. 
 To increase the speed of the process, we can add more Butterfly units to reduce the amount of time needed in the FFT.  
-If we add a pitch detector, we can create an auto-tuner. 
+If we add a pitch detector, we can create an auto-tuner. As of now, our design has a limitation of only scaling an octave, for the future
+we would implement an algorithm to linearly interpolate values in order to scale at different factors. There are also various optimizations
+that can be made if given more time. Although our design has a low power consumption and uses the clock time efficiently, it is slower 
+to implement.
 
 \bibliographystyle{IEEEbib}
 \begin{thebibliography}{10}
@@ -168,6 +193,5 @@ If we add a pitch detector, we can create an auto-tuner.
 \bibitem[4]{bib:butterfly} Takala, J. and K. Punkka, ``Butterfly Unit Supporting Radix-4 and Radix-2 FFT," \url{http://ticsp.cs.tut.fi/images/4/48/Cr1028-riga.pdf}
 \bibitem[5]{bib:fftdit} \url{http://cnx.org/content/m12016/latest/}
 \bibitem[6]{bib:ffttricks} \url{http://cnx.org/content/m12021/latest/}
-\bibitem[7]{bib:wav} \url{https://ccrma.stanford.edu/courses/422/projects/WaveFormat/}
 \end{thebibliography}
 \end{document}
