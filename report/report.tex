@@ -30,7 +30,7 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 
 \title{Veritune: Digital Phase Vocoder}
 \name{Chris Li, Grayson Smith, Carey Zhang}
-\address{github.com/unregistered/speakurity}
+\address{github.com/unregistered/veritune}
 
 %
 \begin{document}
@@ -38,10 +38,10 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 %
 \begin{abstract}
 	For our EE201 final Verilog project, we attempt to implement a digital phase vocoder on the FPGA. 
-	We wrote a 256-point Radix-2 Decimation-in-Time Fast Fourier Transform module, which works in hardware.  
+	We wrote a 256-point Radix-2 Decimation-in-Time Fast Fourier Transform module, which works on the FPGA.  
 	The phase vocoder allows us to do	the actual pitch shifting. Due to the limited resources on the board,
 	we had to implement the phase vocoder in software using \textsc{Matlab}. The software version utilizes a 
-	1024 point transform.
+	1024-point transform.
 \end{abstract}
 
 %
@@ -63,7 +63,8 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
 %
 \section{Radix-2 DIT FFT}
   The first component we had to create was the Fast Fourier Transform. The FFT takes a discrete signal in the time domain and 
-  transforms it into the frequency domain. For our device we need a 1024 point FFT.
+  transforms it into the frequency domain. For this device we will create a 256-point FFT.  From this, a 1024-point FFT can be created
+  by simply modifying several variables.
   \subsection{Relevant Theory}
   The Discrete Fourier Transform is shown below.
   \begin{equation}
@@ -86,17 +87,17 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
   butterfly (after the appearance of crossing lines).
   \begin{figure}[h]
   \includegraphics[width=75mm]{images/butterfly.pdf}
-  \caption{Dataflow of radix-2 DIT FFT \cite{bib:butterfly}. $W_k^n$ represents the Twiddle factor $e^{-\frac{2\pi j}{N}kn}$.}  
+  \caption{Dataflow of an 8-point radix-2 DIT FFT \cite{bib:butterfly}. $W_k^n$ represents the Twiddle factor $e^{-\frac{2\pi j}{N}kn}$.}  
   \label{fig:butterfly}
   \end{figure}
   
   We have chosen this algorithm for the substantial savings in operations. The number of complex multiplies and adds in
-  the Radix-2 DIT FFT scales as $Nlog(N)$. In theory, a 1024 point DFT requires 1048576 multiplies while the FFT uses 
+  the Radix-2 DIT FFT scales as $Nlog(N)$. For instance, a 1024 point DFT requires 1048576 multiplies while the FFT uses 
   only 5120 \cite{bib:fftdit}.
   
   The FFT requires us to compute a complex exponential, which can be expressed as a sine and cosine.  One option would be to 
   implement CORDIC for calculating trigonometric functions.  However, the exponential is a function of only current indexes.  
-  Therefore, we implemented it as a look up table with 512 elements (the function is symmetric).  The elements in the LUT
+  Therefore, we implemented it as a look up table with 256 elements (the function is symmetric).  The elements in the LUT
   are called Twiddle Factors. 
   
   Another feature of this implementation is the bit re-ordering, as shown in the figure. Because the algorithm computes the
@@ -141,7 +142,7 @@ escapeinside={\%*}{*)}          % if you want to add a comment within your code
   \subsection{The Inverse Transform}
     After manipulating the signal in the frequency domain, we must transform back into the time domain for playback. 
     Rather than implementing a separate IFFT module, we can reuse the FFT module.  We simply switch the real and imaginary
-    inputs and divide the final result, which will be located in the imaginary data, by 1024.
+    inputs and divide the final result, which will be located in the imaginary data, by 256.
 
 %
 %
