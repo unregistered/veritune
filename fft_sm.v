@@ -75,7 +75,7 @@ module fft_sm(
 	fft_pointers pointers (
 		.Clk(substate[3]),
 		.Reset(Reset),
-		.Start(Start_FFT),
+		.Start(state[1]),
 		.Ack(1'b0),
 		
   	.address(twiddle_address),
@@ -113,7 +113,6 @@ module fft_sm(
 			case(state)
 				INIT:
 				begin
-					Start_FFT = 1;
 					WE_top = 1;
 					if(init_addr == 255)
 					begin
@@ -136,7 +135,10 @@ module fft_sm(
 				begin
 					WE_top = 0;
 					if(Start)
+					begin
+						Start_FFT = 1;
 						state <= PROC;
+					end
 					else
 						state <= IDLE;
 					
